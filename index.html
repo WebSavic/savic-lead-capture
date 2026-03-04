@@ -1,329 +1,366 @@
-import { useState, useRef, useEffect } from "react";
-
-var COLS = [
-  {wch:5},{wch:28},{wch:20},{wch:26},{wch:14},{wch:26},{wch:36},{wch:40},{wch:22}
-];
-
-function loadXLSX(cb) {
-  if (window.XLSX) { cb(); return; }
-  var s = document.createElement("script");
-  s.src = "https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js";
-  s.onload = cb;
-  document.head.appendChild(s);
-}
-
-function readDb() {
-  try { return JSON.parse(localStorage.getItem("savic_db") || "[]"); }
-  catch(e) { return []; }
-}
-
-function emptyForm() {
-  return { name:"", company:"", phone:"", email:"", requirements:"", linkedin:"" };
-}
-
-var S = {
-  hdr:   { background:"linear-gradient(135deg,#1e3a8a,#3b82f6)", padding:"18px 16px 14px", color:"#fff", position:"sticky", top:0, zIndex:100, boxShadow:"0 2px 12px rgba(30,58,138,.3)" },
-  pg:    { padding:16, paddingBottom:50 },
-  card:  { background:"#fff", borderRadius:18, padding:"22px 18px", textAlign:"center", marginBottom:16, boxShadow:"0 2px 10px rgba(0,0,0,.07)" },
-  btn:   function(bg, fg) { return { width:"100%", border:"none", borderRadius:14, padding:15, fontSize:15, fontWeight:700, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", gap:8, marginBottom:12, background:bg, color:fg||"#fff" }; },
-  ibox:  { background:"#eff6ff", border:"1.5px solid #bfdbfe", borderRadius:12, padding:"12px 14px", fontSize:12, color:"#1e40af", marginBottom:12, lineHeight:1.6 },
-  fcard: function(act) { return { background:"#fff", borderRadius:14, padding:"13px 15px", marginBottom:12, boxShadow:"0 2px 8px rgba(0,0,0,.06)", border: act ? "2px solid #f59e0b" : "2px solid transparent" }; },
-  inp:   { width:"100%", border:"1.5px solid #e2e8f0", borderRadius:10, padding:"10px 12px", fontSize:15, outline:"none", fontFamily:"inherit", color:"#334155", background:"#fff" },
-  mic:   function(on) { return { border:"none", borderRadius:9, padding:"6px 11px", cursor:"pointer", fontSize:12, fontWeight:600, background: on ? "#f59e0b" : "#eff6ff", color: on ? "#fff" : "#3b82f6" }; },
-  evCard:{ background:"#fff", borderRadius:14, padding:"14px 16px", marginBottom:10, boxShadow:"0 2px 8px rgba(0,0,0,.06)" },
-  lcard: { background:"#fff", borderRadius:12, padding:"13px 14px", marginBottom:10, boxShadow:"0 2px 6px rgba(0,0,0,.06)", borderLeft:"4px solid #3b82f6" },
-  sec:   { fontSize:12, fontWeight:700, color:"#64748b", textTransform:"uppercase", letterSpacing:.5, marginBottom:10 },
-  del:   { background:"#fee2e2", border:"none", color:"#ef4444", borderRadius:7, padding:"6px 9px", fontSize:13, cursor:"pointer", flexShrink:0, marginLeft:6 }
-};
-
-export default function App() {
-  var [db, setDb]         = useState(readDb);
-  var [page, setPage]     = useState("home");
-  var [evIdx, setEvIdx]   = useState(null);
-  var [form, setForm]     = useState(emptyForm);
-  var [evName, setEvName] = useState("");
-  var [mic, setMic]       = useState(null);
-  var [saving, setSaving] = useState(false);
-  var [toast, setToast]   = useState(null);
-  var recogRef            = useRef(null);
-
-  useEffect(function() {
-    try { localStorage.setItem("savic_db", JSON.stringify(db)); } catch(e) {}
-  }, [db]);
-
-  function showToast(msg, err) {
-    setToast({ msg:msg, err:!!err });
-    setTimeout(function() { setToast(null); }, 2500);
-  }
-
-  function stopVoice() {
-    if (recogRef.current) { try { recogRef.current.stop(); } catch(e) {} recogRef.current = null; }
-    setMic(null);
-  }
-
-  function toggleVoice(field) {
-    if (mic === field) { stopVoice(); return; }
-    stopVoice();
-    var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SR) { showToast("Voice not supported in this browser", true); return; }
-    var r = new SR();
-    r.lang = "en-IN"; r.continuous = false; r.interimResults = false;
-    r.onstart  = function() { setMic(field); };
-    r.onresult = function(e) {
-      var txt = e.results[0][0].transcript;
-      setForm(function(f) { var u = Object.assign({}, f); u[field] = f[field] ? f[field] + " " + txt : txt; return u; });
-    };
-    r.onerror  = function() { showToast("Mic error. Check permissions.", true); stopVoice(); };
-    r.onend    = function() { setMic(null); };
-    recogRef.current = r;
-    r.start();
-  }
-
-  function goHome() { stopVoice(); setPage("home"); setEvIdx(null); setForm(emptyForm()); }
-  function goCapture(i) { stopVoice(); setEvIdx(i); setForm(emptyForm()); setPage("capture"); }
-  function goLeads(i)   { stopVoice(); setEvIdx(i); setPage("leads"); }
-
-  function createEvent() {
-    var n = evName.trim();
-    if (!n) { showToast("Enter event name!", true); return; }
-    for (var i = 0; i < db.length; i++) { if (db[i].name === n) { showToast("Event already exists!", true); return; } }
-    setDb(function(d) { return [{ name:n, leads:[], created:new Date().toLocaleString("en-IN") }].concat(d); });
-    setEvName("");
-    showToast("Event created!");
-  }
-
-  function deleteEvent(i) {
-    if (!window.confirm("Delete this event and all its leads?")) return;
-    setDb(function(d) { return d.filter(function(_,x){ return x!==i; }); });
-    showToast("Deleted");
-  }
-
-  function saveLead() {
-    if (!form.name.trim() || !form.company.trim()) { showToast("Name and Company required!", true); return; }
-    setSaving(true);
-    var lead = Object.assign({}, form, { datetime: new Date().toLocaleString("en-IN") });
-    setDb(function(d) {
-      return d.map(function(ev, i) {
-        if (i !== evIdx) return ev;
-        return Object.assign({}, ev, { leads: ev.leads.concat([lead]) });
-      });
-    });
-    showToast("Lead saved! ✅");
-    setTimeout(function() { setForm(emptyForm()); setSaving(false); }, 700);
-  }
-
-  function deleteLead(li) {
-    if (!window.confirm("Remove this lead?")) return;
-    setDb(function(d) {
-      return d.map(function(ev, i) {
-        if (i !== evIdx) return ev;
-        return Object.assign({}, ev, { leads: ev.leads.filter(function(_,x){ return x!==li; }) });
-      });
-    });
-  }
-
-  function buildRows(ev) {
-    return ev.leads.map(function(l, i) {
-      return { "Sr.No.":i+1, "Event":ev.name, "Full Name":l.name, "Company":l.company,
-        "Phone":l.phone, "Email":l.email, "Requirements":l.requirements,
-        "LinkedIn":l.linkedin, "Date & Time":l.datetime };
-    });
-  }
-
-  function exportOne(i) {
-    var ev = db[i];
-    if (!ev.leads.length) { showToast("No leads!", true); return; }
-    loadXLSX(function() {
-      var ws = window.XLSX.utils.json_to_sheet(buildRows(ev));
-      ws["!cols"] = COLS;
-      var wb = window.XLSX.utils.book_new();
-      window.XLSX.utils.book_append_sheet(wb, ws, "Leads");
-      window.XLSX.writeFile(wb, "SAVIC_" + ev.name.replace(/\s+/g,"_").substring(0,40) + "_" + new Date().toISOString().slice(0,10) + ".xlsx");
-      showToast("Exported! 📊");
-    });
-  }
-
-  function exportAll() {
-    var all = [];
-    db.forEach(function(ev) { buildRows(ev).forEach(function(r){ all.push(r); }); });
-    if (!all.length) { showToast("No leads!", true); return; }
-    loadXLSX(function() {
-      var wb = window.XLSX.utils.book_new();
-      var mws = window.XLSX.utils.json_to_sheet(all); mws["!cols"] = COLS;
-      window.XLSX.utils.book_append_sheet(wb, mws, "ALL LEADS");
-      db.forEach(function(ev) {
-        if (!ev.leads.length) return;
-        var ws = window.XLSX.utils.json_to_sheet(buildRows(ev)); ws["!cols"] = COLS;
-        window.XLSX.utils.book_append_sheet(wb, ws, ev.name.substring(0,31).replace(/[:\\\/\?\*\[\]]/g,""));
-      });
-      window.XLSX.writeFile(wb, "SAVIC_Master_" + new Date().toISOString().slice(0,10) + ".xlsx");
-      showToast("Master Excel exported! 📊");
-    });
-  }
-
-  function searchLinkedIn() {
-    if (!form.name.trim()) { showToast("Enter name first", true); return; }
-    var q = encodeURIComponent('"' + form.name + '"' + (form.company ? ' "' + form.company + '"' : '') + " site:linkedin.com/in");
-    window.open("https://www.google.com/search?q=" + q, "_blank");
-  }
-
-  var curEv = evIdx !== null ? db[evIdx] : null;
-
-  var CAPTURE_FIELDS = [
-    { key:"name",         label:"Full Name",    icon:"👤", type:"text",  req:true },
-    { key:"company",      label:"Company",      icon:"🏢", type:"text",  req:true },
-    { key:"phone",        label:"Phone",        icon:"📞", type:"tel",   req:false },
-    { key:"email",        label:"Email",        icon:"✉️", type:"email", req:false },
-    { key:"requirements", label:"Requirements", icon:"📋", type:"area",  req:false }
-  ];
-
-  return (
-    <div style={{ fontFamily:"'Segoe UI',sans-serif", background:"#f0f4ff", minHeight:"100vh", maxWidth:480, margin:"0 auto" }}>
-
-      {toast && (
-        <div style={{ position:"fixed", top:18, left:"50%", transform:"translateX(-50%)", background: toast.err ? "#ef4444" : "#22c55e", color:"#fff", padding:"9px 20px", borderRadius:30, fontWeight:600, zIndex:999, fontSize:13, boxShadow:"0 4px 18px rgba(0,0,0,.2)", whiteSpace:"nowrap" }}>
-          {toast.msg}
-        </div>
-      )}
-
-      {/* HEADER */}
-      <div style={S.hdr}>
-        <div style={{ display:"flex", alignItems:"center", gap:10 }}>
-          {page !== "home" && (
-            <button onClick={goHome} style={{ background:"rgba(255,255,255,.2)", border:"none", color:"#fff", width:34, height:34, borderRadius:"50%", fontSize:17, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center" }}>←</button>
-          )}
-          <div style={{ flex:1 }}>
-            <div style={{ fontSize:17, fontWeight:700 }}>SAVIC Lead Capture Pro</div>
-            <div style={{ fontSize:11, opacity:.8, marginTop:2 }}>
-              {page === "home" ? "SAP Workshop Lead Manager" : curEv ? curEv.name : ""}
-            </div>
-          </div>
-        </div>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
+<meta name="theme-color" content="#1e3a8a"/>
+<meta name="mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<title>SAVIC Lead Capture Pro</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:'Segoe UI',sans-serif;background:#f0f4ff;min-height:100vh;max-width:480px;margin:0 auto}
+#app{min-height:100vh}
+.hdr{background:linear-gradient(135deg,#1e3a8a,#3b82f6);padding:18px 16px 14px;color:#fff;position:sticky;top:0;z-index:100;box-shadow:0 2px 12px rgba(30,58,138,.3)}
+.hdr-row{display:flex;align-items:center;gap:10px}
+.back-btn{background:rgba(255,255,255,.2);border:none;color:#fff;width:34px;height:34px;border-radius:50%;font-size:17px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.hdr-title{font-size:17px;font-weight:700}
+.hdr-sub{font-size:11px;opacity:.8;margin-top:2px}
+.pg{padding:16px;padding-bottom:50px;display:none}
+.pg.active{display:block}
+.hero{background:#fff;border-radius:18px;padding:22px 18px;text-align:center;margin-bottom:16px;box-shadow:0 2px 10px rgba(0,0,0,.07)}
+.hero-icon{font-size:48px;margin-bottom:6px}
+.hero-title{font-size:18px;font-weight:700;color:#1e3a8a}
+.hero-sub{color:#64748b;font-size:13px;margin-top:5px}
+.sec-label{font-size:12px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;margin-top:4px}
+.white-box{background:#fff;border-radius:14px;padding:14px 16px;margin-bottom:14px;box-shadow:0 2px 8px rgba(0,0,0,.06)}
+.white-box label{font-size:13px;font-weight:600;color:#1e3a8a;display:block;margin-bottom:6px}
+.inp{width:100%;border:1.5px solid #e2e8f0;border-radius:10px;padding:10px 12px;font-size:15px;outline:none;font-family:inherit;color:#334155;background:#fff}
+.inp:focus{border-color:#3b82f6}
+textarea.inp{resize:none}
+.btn{width:100%;border:none;border-radius:14px;padding:15px;font-size:15px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:12px}
+.btn-blue{background:linear-gradient(135deg,#1e3a8a,#3b82f6);color:#fff}
+.btn-green{background:#16a34a;color:#fff}
+.btn-purple{background:#7c3aed;color:#fff}
+.fcard{background:#fff;border-radius:14px;padding:13px 15px;margin-bottom:12px;box-shadow:0 2px 8px rgba(0,0,0,.06);border:2px solid transparent}
+.fcard.listening{border-color:#f59e0b}
+.frow{display:flex;align-items:center;justify-content:space-between;margin-bottom:7px}
+.flabel{font-weight:600;color:#1e3a8a;font-size:13px}
+.req{color:#ef4444}
+.mic-btn{border:none;border-radius:9px;padding:6px 11px;cursor:pointer;font-size:12px;font-weight:600;background:#eff6ff;color:#3b82f6}
+.mic-btn.on{background:#f59e0b;color:#fff}
+.voice-banner{border-radius:12px;padding:10px 14px;margin-bottom:14px;display:flex;align-items:center;gap:8px;font-size:12px;background:#eff6ff;border:2px solid #bfdbfe;color:#1e40af}
+.voice-banner.on{background:#fef3c7;border-color:#f59e0b;color:#92400e}
+.li-row{display:flex;gap:8px;align-items:center}
+.li-btn{flex-shrink:0;border:none;border-radius:9px;padding:8px 12px;font-size:12px;font-weight:700;cursor:pointer;background:#0a66c2;color:#fff}
+.save-btn{background:linear-gradient(135deg,#1e3a8a,#3b82f6);color:#fff;border:none;border-radius:14px;padding:16px;font-size:16px;font-weight:700;cursor:pointer;width:100%;margin-top:6px}
+.save-btn.saved{background:#22c55e}
+.ev-card{background:#fff;border-radius:14px;padding:14px 16px;margin-bottom:10px;box-shadow:0 2px 8px rgba(0,0,0,.06)}
+.ev-name{font-weight:700;color:#1e3a8a;font-size:15px}
+.ev-meta{font-size:12px;color:#64748b;margin-top:3px}
+.ev-actions{display:flex;gap:6px;margin-top:10px}
+.ev-btn{flex:1;border:none;border-radius:9px;padding:8px 4px;font-size:11px;font-weight:600;cursor:pointer}
+.ev-add{background:#eff6ff;color:#1e3a8a}
+.ev-view{background:#dcfce7;color:#16a34a}
+.ev-exp{background:#f0fdf4;color:#16a34a}
+.ev-del{background:#fee2e2;color:#ef4444}
+.lead-card{background:#fff;border-radius:12px;padding:13px 14px;margin-bottom:10px;box-shadow:0 2px 6px rgba(0,0,0,.06);border-left:4px solid #3b82f6}
+.lead-name{font-weight:700;font-size:14px;color:#1e3a8a}
+.lead-det{font-size:12px;color:#475569;margin-top:3px}
+.lead-req{font-size:12px;color:#64748b;margin-top:5px;background:#f8fafc;border-radius:7px;padding:5px 9px}
+.lead-time{font-size:10px;color:#94a3b8;margin-top:4px}
+.lead-row{display:flex;justify-content:space-between;align-items:flex-start}
+.del-btn{background:#fee2e2;border:none;color:#ef4444;border-radius:7px;padding:6px 9px;font-size:13px;cursor:pointer;flex-shrink:0;margin-left:6px}
+.info-box{background:#eff6ff;border:1.5px solid #bfdbfe;border-radius:12px;padding:12px 14px;font-size:12px;color:#1e40af;margin-bottom:12px;line-height:1.6}
+.toast{position:fixed;top:18px;left:50%;transform:translateX(-50%);color:#fff;padding:9px 20px;border-radius:30px;font-weight:600;z-index:9999;font-size:13px;box-shadow:0 4px 18px rgba(0,0,0,.2);display:none;max-width:90vw;text-align:center;white-space:nowrap}
+.toast.ok{background:#22c55e}
+.toast.err{background:#ef4444}
+.empty{text-align:center;padding:40px 20px;color:#94a3b8}
+.badge{background:#3b82f6;color:#fff;border-radius:20px;padding:1px 8px;font-size:11px;margin-left:6px}
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="hdr">
+    <div class="hdr-row">
+      <button class="back-btn" id="back-btn" style="display:none" onclick="navBack()">&#8592;</button>
+      <div style="flex:1">
+        <div class="hdr-title">SAVIC Lead Capture Pro</div>
+        <div class="hdr-sub" id="hdr-sub">SAP Workshop Lead Manager</div>
       </div>
-
-      {/* HOME */}
-      {page === "home" && (
-        <div style={S.pg}>
-          <div style={S.card}>
-            <div style={{ fontSize:48, marginBottom:6 }}>🎯</div>
-            <div style={{ fontSize:18, fontWeight:700, color:"#1e3a8a" }}>SAVIC Lead Capture Pro</div>
-            <div style={{ color:"#64748b", fontSize:13, marginTop:5 }}>Event-wise leads · Voice input · LinkedIn · Excel export</div>
-          </div>
-
-          <div style={S.sec}>Create New Event</div>
-          <div style={{ background:"#fff", borderRadius:14, padding:"14px 16px", marginBottom:16, boxShadow:"0 2px 8px rgba(0,0,0,.06)" }}>
-            <input style={S.inp} value={evName} onChange={function(e){ setEvName(e.target.value); }} placeholder="e.g. SAP S/4HANA Workshop Mumbai Mar 2026" onKeyDown={function(e){ if(e.key==="Enter") createEvent(); }}/>
-            <button style={Object.assign({}, S.btn("linear-gradient(135deg,#1e3a8a,#3b82f6)"), { marginTop:10, marginBottom:0 })} onClick={createEvent}>🚀 Create Event</button>
-          </div>
-
-          <div style={S.sec}>My Events ({db.length})</div>
-
-          {!db.length && (
-            <div style={{ textAlign:"center", padding:"40px 20px", color:"#94a3b8" }}>
-              <div style={{ fontSize:44 }}>📭</div>
-              <div style={{ fontWeight:600, marginTop:10 }}>No events yet</div>
-            </div>
-          )}
-
-          {db.map(function(ev, i) {
-            return (
-              <div key={i} style={S.evCard}>
-                <div style={{ fontWeight:700, color:"#1e3a8a", fontSize:15 }}>📅 {ev.name}</div>
-                <div style={{ fontSize:12, color:"#64748b", marginTop:3 }}>{ev.leads.length} lead{ev.leads.length!==1?"s":""} · {ev.created}</div>
-                <div style={{ display:"flex", gap:6, marginTop:10 }}>
-                  {[
-                    { label:"+ Add",    bg:"#eff6ff", fg:"#1e3a8a", fn:function(){ goCapture(i); } },
-                    { label:"👥 View",  bg:"#dcfce7", fg:"#16a34a", fn:function(){ goLeads(i); } },
-                    { label:"📊 Export",bg:"#f0fdf4", fg:"#16a34a", fn:function(){ exportOne(i); } },
-                    { label:"🗑",       bg:"#fee2e2", fg:"#ef4444", fn:function(){ deleteEvent(i); } }
-                  ].map(function(b, bi) {
-                    return <button key={bi} onClick={b.fn} style={{ flex:1, border:"none", borderRadius:9, padding:8, fontSize:12, fontWeight:600, cursor:"pointer", background:b.bg, color:b.fg }}>{b.label}</button>;
-                  })}
-                </div>
-              </div>
-            );
-          })}
-
-          {db.length > 0 && (
-            <button style={S.btn("#7c3aed")} onClick={exportAll}>📚 Export ALL Events – Master Excel</button>
-          )}
-        </div>
-      )}
-
-      {/* CAPTURE */}
-      {page === "capture" && (
-        <div style={S.pg}>
-          <div style={{ background: mic ? "#fef3c7" : "#eff6ff", border:"2px solid " + (mic ? "#f59e0b":"#bfdbfe"), borderRadius:12, padding:"10px 14px", marginBottom:14, fontSize:12, color: mic ? "#92400e":"#1e40af", display:"flex", alignItems:"center", gap:8 }}>
-            <span>{mic ? "🎙️" : "💡"}</span>
-            <span>{mic ? ("Listening for " + mic + "... speak now") : "Tap 🎤 next to any field for voice input"}</span>
-            {mic && <button onClick={stopVoice} style={{ marginLeft:"auto", background:"#ef4444", color:"#fff", border:"none", borderRadius:7, padding:"4px 10px", fontSize:11, cursor:"pointer" }}>Stop</button>}
-          </div>
-
-          {CAPTURE_FIELDS.map(function(f) {
-            return (
-              <div key={f.key} style={S.fcard(mic===f.key)}>
-                <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:7 }}>
-                  <span style={{ fontWeight:600, color:"#1e3a8a", fontSize:13 }}>{f.icon} {f.label}{f.req && <span style={{ color:"#ef4444" }}>*</span>}</span>
-                  <button style={S.mic(mic===f.key)} onClick={function(){ toggleVoice(f.key); }}>{mic===f.key ? "⏹ Stop" : "🎤"}</button>
-                </div>
-                {f.type === "area"
-                  ? <textarea rows={3} style={Object.assign({}, S.inp, { resize:"none" })} value={form[f.key]} onChange={function(e){ var v=e.target.value; setForm(function(p){ return Object.assign({},p,{ requirements:v }); }); }} placeholder="SAP module, budget, timeline..."/>
-                  : <input type={f.type} style={S.inp} value={form[f.key]} onChange={function(e){ var v=e.target.value,k=f.key; setForm(function(p){ var u=Object.assign({},p); u[k]=v; return u; }); }} placeholder={f.label}/>
-                }
-              </div>
-            );
-          })}
-
-          <div style={S.fcard(false)}>
-            <div style={{ fontWeight:600, color:"#1e3a8a", fontSize:13, marginBottom:8 }}>🔗 LinkedIn Profile</div>
-            <div style={{ display:"flex", gap:8 }}>
-              <input type="url" style={Object.assign({}, S.inp, { flex:1 })} value={form.linkedin} onChange={function(e){ var v=e.target.value; setForm(function(p){ return Object.assign({},p,{linkedin:v}); }); }} placeholder="Paste URL or search below"/>
-              <button onClick={searchLinkedIn} style={{ flexShrink:0, border:"none", borderRadius:9, padding:"8px 12px", fontSize:12, fontWeight:700, cursor:"pointer", background:"#0a66c2", color:"#fff" }}>🔍 Search</button>
-            </div>
-            <div style={{ fontSize:11, color:"#64748b", marginTop:5 }}>Opens Google → find profile → paste URL above</div>
-          </div>
-
-          <button onClick={saveLead} disabled={saving} style={{ background: saving ? "#22c55e" : "linear-gradient(135deg,#1e3a8a,#3b82f6)", color:"#fff", border:"none", borderRadius:14, padding:16, fontSize:16, fontWeight:700, cursor:"pointer", width:"100%", marginTop:6 }}>
-            {saving ? "✅ Saved!" : "💾 Save Lead"}
-          </button>
-        </div>
-      )}
-
-      {/* LEADS */}
-      {page === "leads" && curEv && (
-        <div style={S.pg}>
-          <div style={S.ibox}><b>{curEv.name}</b> · {curEv.leads.length} lead{curEv.leads.length!==1?"s":""} · {curEv.created}</div>
-          <button style={S.btn("linear-gradient(135deg,#1e3a8a,#3b82f6)")} onClick={function(){ goCapture(evIdx); }}>➕ Add Lead</button>
-          <button style={S.btn("#16a34a")} onClick={function(){ exportOne(evIdx); }}>📊 Export This Event to Excel</button>
-
-          {!curEv.leads.length && (
-            <div style={{ textAlign:"center", padding:"40px 20px", color:"#94a3b8" }}>
-              <div style={{ fontSize:44 }}>👥</div>
-              <div style={{ fontWeight:600, marginTop:10 }}>No leads yet</div>
-            </div>
-          )}
-
-          {curEv.leads.slice().reverse().map(function(l, ri) {
-            var realIdx = curEv.leads.length - 1 - ri;
-            return (
-              <div key={ri} style={S.lcard}>
-                <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start" }}>
-                  <div style={{ flex:1 }}>
-                    <div style={{ fontWeight:700, fontSize:14, color:"#1e3a8a" }}>👤 {l.name}</div>
-                    <div style={{ fontSize:12, color:"#475569", marginTop:3 }}>🏢 {l.company}</div>
-                    {l.phone && <div style={{ fontSize:12, color:"#475569", marginTop:2 }}>📞 {l.phone}</div>}
-                    {l.email && <div style={{ fontSize:12, color:"#475569", marginTop:2 }}>✉️ {l.email}</div>}
-                    {l.requirements && <div style={{ fontSize:12, color:"#64748b", marginTop:5, background:"#f8fafc", borderRadius:7, padding:"5px 9px" }}>📋 {l.requirements}</div>}
-                    {l.linkedin && <div style={{ fontSize:11, marginTop:4 }}><a href={l.linkedin} target="_blank" style={{ color:"#0a66c2" }}>🔗 LinkedIn</a></div>}
-                    <div style={{ fontSize:10, color:"#94a3b8", marginTop:4 }}>🕐 {l.datetime}</div>
-                  </div>
-                  <button onClick={function(){ deleteLead(realIdx); }} style={S.del}>🗑</button>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      )}
     </div>
-  );
+  </div>
+  <div class="toast" id="toast"></div>
+
+  <!-- HOME -->
+  <div class="pg active" id="pg-home">
+    <div class="hero">
+      <div class="hero-icon">&#127919;</div>
+      <div class="hero-title">SAVIC Lead Capture Pro</div>
+      <div class="hero-sub">Event-wise leads &bull; Voice input &bull; LinkedIn lookup &bull; Excel export</div>
+    </div>
+    <div class="sec-label">Create New Event</div>
+    <div class="white-box">
+      <label>Event Name</label>
+      <input class="inp" type="text" id="inp-ev" placeholder="e.g. SAP S/4HANA Workshop Mumbai Mar 2026" onkeydown="if(event.key==='Enter')createEvent()"/>
+      <button class="btn btn-blue" style="margin-top:10px;margin-bottom:0" onclick="createEvent()">&#128640; Create Event</button>
+    </div>
+    <div class="sec-label">My Events <span class="badge" id="ev-badge">0</span></div>
+    <div id="events-list"></div>
+    <div id="export-all-wrap" style="display:none;margin-top:4px">
+      <button class="btn btn-purple" onclick="exportAll()">&#128218; Export ALL Events &mdash; Master Excel</button>
+    </div>
+  </div>
+
+  <!-- CAPTURE -->
+  <div class="pg" id="pg-capture">
+    <div class="voice-banner" id="voice-banner">
+      <span>&#128161;</span>
+      <span id="banner-txt">Tap mic button next to any field for voice input</span>
+    </div>
+    <div class="fcard" id="card-name">
+      <div class="frow"><span class="flabel">&#128100; Full Name <span class="req">*</span></span><button class="mic-btn" id="mic-name" onclick="toggleVoice('name')">&#127908; Voice</button></div>
+      <input class="inp" type="text" id="f-name" placeholder="e.g. Rajesh Kumar"/>
+    </div>
+    <div class="fcard" id="card-company">
+      <div class="frow"><span class="flabel">&#127970; Company <span class="req">*</span></span><button class="mic-btn" id="mic-company" onclick="toggleVoice('company')">&#127908; Voice</button></div>
+      <input class="inp" type="text" id="f-company" placeholder="e.g. Tata Consultancy Services"/>
+    </div>
+    <div class="fcard" id="card-phone">
+      <div class="frow"><span class="flabel">&#128222; Phone</span><button class="mic-btn" id="mic-phone" onclick="toggleVoice('phone')">&#127908; Voice</button></div>
+      <input class="inp" type="tel" id="f-phone" placeholder="e.g. 9876543210"/>
+    </div>
+    <div class="fcard" id="card-email">
+      <div class="frow"><span class="flabel">&#9993; Email</span><button class="mic-btn" id="mic-email" onclick="toggleVoice('email')">&#127908; Voice</button></div>
+      <input class="inp" type="email" id="f-email" placeholder="e.g. rajesh@tcs.com"/>
+    </div>
+    <div class="fcard" id="card-requirements">
+      <div class="frow"><span class="flabel">&#128203; Requirements</span><button class="mic-btn" id="mic-requirements" onclick="toggleVoice('requirements')">&#127908; Voice</button></div>
+      <textarea class="inp" id="f-requirements" rows="3" placeholder="SAP module, budget, timeline..."></textarea>
+    </div>
+    <div class="fcard">
+      <div class="flabel" style="margin-bottom:8px">&#128279; LinkedIn Profile</div>
+      <div class="li-row">
+        <input class="inp" type="url" id="f-linkedin" placeholder="Paste URL or use Search"/>
+        <button class="li-btn" onclick="searchLinkedIn()">&#128269; Search</button>
+      </div>
+      <div id="li-status" style="font-size:11px;color:#64748b;margin-top:5px"></div>
+    </div>
+    <button class="save-btn" id="save-btn" onclick="saveLead()">&#128190; Save Lead</button>
+  </div>
+
+  <!-- LEADS -->
+  <div class="pg" id="pg-leads">
+    <div class="info-box" id="ev-infobox"></div>
+    <button class="btn btn-blue" style="margin-bottom:10px" onclick="goCapture()">&#43; Add Lead</button>
+    <button class="btn btn-green" style="margin-bottom:16px" onclick="exportCurrentEvent()">&#128202; Export This Event to Excel</button>
+    <div id="leads-list"></div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script>
+var db = [];
+var curIdx = null;
+var recog = null;
+var activeField = null;
+
+function loadDb() { try { db = JSON.parse(localStorage.getItem('savic_db') || '[]'); } catch(e) { db = []; } }
+function saveDb() { localStorage.setItem('savic_db', JSON.stringify(db)); }
+
+function showToast(msg, type) {
+  var t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast ' + (type || 'ok');
+  t.style.display = 'block';
+  clearTimeout(t._t);
+  t._t = setTimeout(function() { t.style.display = 'none'; }, 2500);
 }
+
+function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+function showPage(id) {
+  var pages = document.querySelectorAll('.pg');
+  for (var i = 0; i < pages.length; i++) pages[i].classList.remove('active');
+  document.getElementById(id).classList.add('active');
+  document.getElementById('back-btn').style.display = id === 'pg-home' ? 'none' : 'flex';
+}
+
+function navBack() {
+  stopVoice();
+  if (document.getElementById('pg-capture').classList.contains('active')) {
+    renderLeads(); showPage('pg-leads');
+  } else {
+    curIdx = null;
+    document.getElementById('hdr-sub').textContent = 'SAP Workshop Lead Manager';
+    renderEvents(); showPage('pg-home');
+  }
+}
+
+function createEvent() {
+  var name = document.getElementById('inp-ev').value.trim();
+  if (!name) { showToast('Enter an event name!', 'err'); return; }
+  for (var i = 0; i < db.length; i++) { if (db[i].name === name) { showToast('Event already exists!', 'err'); return; } }
+  db.unshift({ name: name, leads: [], created: new Date().toLocaleString('en-IN') });
+  saveDb();
+  document.getElementById('inp-ev').value = '';
+  showToast('Event created!');
+  renderEvents();
+}
+
+function renderEvents() {
+  var n = db.length;
+  document.getElementById('ev-badge').textContent = n;
+  document.getElementById('export-all-wrap').style.display = n ? 'block' : 'none';
+  var el = document.getElementById('events-list');
+  if (!n) { el.innerHTML = '<div class="empty"><div style="font-size:44px">&#128195;</div><div style="font-weight:600;margin-top:10px">No events yet</div><div style="font-size:12px;margin-top:4px">Create your first event above</div></div>'; return; }
+  var html = '';
+  for (var i = 0; i < db.length; i++) {
+    var ev = db[i];
+    html += '<div class="ev-card">' +
+      '<div class="ev-name">&#128197; ' + esc(ev.name) + '</div>' +
+      '<div class="ev-meta">' + ev.leads.length + ' lead' + (ev.leads.length !== 1 ? 's' : '') + ' &middot; ' + esc(ev.created) + '</div>' +
+      '<div class="ev-actions">' +
+        '<button class="ev-btn ev-add" onclick="openCapture(' + i + ')">+ Add</button>' +
+        '<button class="ev-btn ev-view" onclick="openLeads(' + i + ')">&#128101; View</button>' +
+        '<button class="ev-btn ev-exp" onclick="exportEvent(' + i + ')">&#128202; Export</button>' +
+        '<button class="ev-btn ev-del" onclick="deleteEvent(' + i + ')">&#128465;</button>' +
+      '</div></div>';
+  }
+  el.innerHTML = html;
+}
+
+function openCapture(i) { curIdx = i; document.getElementById('hdr-sub').textContent = db[i].name; clearForm(); showPage('pg-capture'); }
+function goCapture() { clearForm(); showPage('pg-capture'); }
+function openLeads(i) { curIdx = i; document.getElementById('hdr-sub').textContent = db[i].name; renderLeads(); showPage('pg-leads'); }
+
+function deleteEvent(i) {
+  if (!confirm('Delete "' + db[i].name + '" and all its leads?')) return;
+  db.splice(i, 1); saveDb(); renderEvents(); showToast('Event deleted');
+}
+
+function renderLeads() {
+  var ev = db[curIdx];
+  document.getElementById('ev-infobox').innerHTML = '<b>' + esc(ev.name) + '</b> &middot; ' + ev.leads.length + ' lead' + (ev.leads.length !== 1 ? 's' : '') + ' &middot; ' + esc(ev.created);
+  var el = document.getElementById('leads-list');
+  if (!ev.leads.length) { el.innerHTML = '<div class="empty"><div style="font-size:44px">&#128101;</div><div style="font-weight:600;margin-top:10px">No leads yet</div></div>'; return; }
+  var html = '';
+  for (var i = ev.leads.length - 1; i >= 0; i--) {
+    var l = ev.leads[i];
+    html += '<div class="lead-card"><div class="lead-row"><div style="flex:1">' +
+      '<div class="lead-name">&#128100; ' + esc(l.name) + '</div>' +
+      '<div class="lead-det">&#127970; ' + esc(l.company) + '</div>' +
+      (l.phone ? '<div class="lead-det">&#128222; ' + esc(l.phone) + '</div>' : '') +
+      (l.email ? '<div class="lead-det">&#9993; ' + esc(l.email) + '</div>' : '') +
+      (l.requirements ? '<div class="lead-req">&#128203; ' + esc(l.requirements) + '</div>' : '') +
+      (l.linkedin ? '<div style="font-size:11px;margin-top:4px"><a href="' + esc(l.linkedin) + '" target="_blank" style="color:#0a66c2">&#128279; LinkedIn</a></div>' : '') +
+      '<div class="lead-time">&#128336; ' + esc(l.datetime) + '</div>' +
+      '</div><button class="del-btn" onclick="deleteLead(' + i + ')">&#128465;</button></div></div>';
+  }
+  el.innerHTML = html;
+}
+
+function saveLead() {
+  var name = document.getElementById('f-name').value.trim();
+  var company = document.getElementById('f-company').value.trim();
+  if (!name || !company) { showToast('Name and Company required!', 'err'); return; }
+  var lead = { name:name, company:company, phone:document.getElementById('f-phone').value.trim(), email:document.getElementById('f-email').value.trim(), requirements:document.getElementById('f-requirements').value.trim(), linkedin:document.getElementById('f-linkedin').value.trim(), datetime:new Date().toLocaleString('en-IN') };
+  db[curIdx].leads.push(lead);
+  saveDb();
+  var btn = document.getElementById('save-btn');
+  btn.textContent = 'Saved!'; btn.classList.add('saved');
+  showToast('Lead saved!');
+  setTimeout(function() { btn.textContent = 'Save Lead'; btn.classList.remove('saved'); clearForm(); }, 800);
+}
+
+function deleteLead(i) {
+  if (!confirm('Remove this lead?')) return;
+  db[curIdx].leads.splice(i, 1); saveDb(); renderLeads(); showToast('Lead removed');
+}
+
+function buildRows(ev) {
+  var rows = [];
+  for (var i = 0; i < ev.leads.length; i++) {
+    var l = ev.leads[i];
+    rows.push({ 'Sr.No.':i+1, 'Event':ev.name, 'Full Name':l.name, 'Company':l.company, 'Phone':l.phone, 'Email':l.email, 'Requirements':l.requirements, 'LinkedIn':l.linkedin, 'Date & Time':l.datetime });
+  }
+  return rows;
+}
+function makeWs(rows) {
+  var ws = XLSX.utils.json_to_sheet(rows);
+  ws['!cols'] = [{wch:5},{wch:28},{wch:20},{wch:26},{wch:14},{wch:26},{wch:36},{wch:40},{wch:22}];
+  return ws;
+}
+function exportCurrentEvent() {
+  if (!db[curIdx].leads.length) { showToast('No leads!', 'err'); return; }
+  var wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, makeWs(buildRows(db[curIdx])), 'Leads');
+  XLSX.writeFile(wb, 'SAVIC_' + db[curIdx].name.replace(/\s+/g,'_').substring(0,40) + '_' + new Date().toISOString().slice(0,10) + '.xlsx');
+  showToast('Exported!');
+}
+function exportEvent(i) {
+  if (!db[i].leads.length) { showToast('No leads in this event!', 'err'); return; }
+  var wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, makeWs(buildRows(db[i])), 'Leads');
+  XLSX.writeFile(wb, 'SAVIC_' + db[i].name.replace(/\s+/g,'_').substring(0,40) + '_' + new Date().toISOString().slice(0,10) + '.xlsx');
+  showToast('Exported!');
+}
+function exportAll() {
+  var allRows = [];
+  var wb = XLSX.utils.book_new();
+  for (var i = 0; i < db.length; i++) {
+    if (!db[i].leads.length) continue;
+    var rows = buildRows(db[i]);
+    for (var j = 0; j < rows.length; j++) allRows.push(rows[j]);
+    XLSX.utils.book_append_sheet(wb, makeWs(rows), db[i].name.substring(0,28).replace(/[:\\\/\?\*\[\]]/g,''));
+  }
+  if (!allRows.length) { showToast('No leads to export!', 'err'); return; }
+  wb.SheetNames.unshift('ALL LEADS');
+  wb.Sheets['ALL LEADS'] = makeWs(allRows);
+  XLSX.writeFile(wb, 'SAVIC_Master_Leads_' + new Date().toISOString().slice(0,10) + '.xlsx');
+  showToast('Master Excel exported!');
+}
+
+function toggleVoice(field) {
+  if (activeField === field) { stopVoice(); return; }
+  stopVoice();
+  var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) { showToast('Voice not supported', 'err'); return; }
+  recog = new SR(); recog.lang = 'en-IN'; recog.continuous = false; recog.interimResults = false;
+  recog.onstart = function() {
+    activeField = field;
+    document.getElementById('card-' + field).classList.add('listening');
+    document.getElementById('mic-' + field).classList.add('on');
+    document.getElementById('mic-' + field).textContent = 'Stop';
+    document.getElementById('voice-banner').classList.add('on');
+    var labels = { name:'Full Name', company:'Company', phone:'Phone', email:'Email', requirements:'Requirements' };
+    document.getElementById('banner-txt').textContent = 'Listening for ' + labels[field] + '... speak now';
+  };
+  recog.onresult = function(e) {
+    var txt = e.results[0][0].transcript;
+    var el = document.getElementById('f-' + field);
+    el.value = el.value ? el.value + ' ' + txt : txt;
+  };
+  recog.onerror = function() { showToast('Mic error', 'err'); stopVoice(); };
+  recog.onend = function() { stopVoice(); };
+  recog.start();
+}
+function stopVoice() {
+  if (recog) { try { recog.stop(); } catch(e) {} recog = null; }
+  if (activeField) {
+    document.getElementById('card-' + activeField).classList.remove('listening');
+    document.getElementById('mic-' + activeField).classList.remove('on');
+    document.getElementById('mic-' + activeField).innerHTML = '&#127908; Voice';
+  }
+  activeField = null;
+  document.getElementById('voice-banner').classList.remove('on');
+  document.getElementById('banner-txt').textContent = 'Tap mic button next to any field for voice input';
+}
+function searchLinkedIn() {
+  var n = document.getElementById('f-name').value.trim();
+  var c = document.getElementById('f-company').value.trim();
+  if (!n) { showToast('Enter name first', 'err'); return; }
+  window.open('https://www.google.com/search?q=' + encodeURIComponent('"'+n+'"'+(c?' "'+c+'"':'')+' site:linkedin.com/in'), '_blank');
+  document.getElementById('li-status').textContent = 'Copy the LinkedIn URL from Google and paste above';
+}
+function clearForm() {
+  var fields = ['name','company','phone','email','requirements','linkedin'];
+  for (var i = 0; i < fields.length; i++) document.getElementById('f-' + fields[i]).value = '';
+  document.getElementById('li-status').textContent = '';
+  stopVoice();
+}
+
+loadDb(); renderEvents();
+</script>
+</body>
+</html>
