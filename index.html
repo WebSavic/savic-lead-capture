@@ -252,6 +252,20 @@ input.filled{border-color:#10b981;background:#f0fdf4}
   <!-- Admin panel (shown after login) -->
   <div id="adminPanel" style="display:none">
 
+    <!-- Admin header with user info + logout -->
+    <div class="card" style="background:linear-gradient(135deg,#1a3c6e,#2563eb);color:#fff;margin-bottom:14px">
+      <div style="display:flex;align-items:center;justify-content:space-between">
+        <div>
+          <div style="font-size:13px;opacity:.8">Signed in as Admin</div>
+          <div style="font-size:15px;font-weight:600;margin-top:2px" id="adminUserLabel">–</div>
+        </div>
+        <button class="btn btn-sm" onclick="adminLogout()"
+          style="background:rgba(255,255,255,.15);color:#fff;border:1.5px solid rgba(255,255,255,.3);width:auto">
+          🚪 Sign Out
+        </button>
+      </div>
+    </div>
+
     <!-- OneDrive status -->
     <div class="card" id="odStatusCard">
       <h2>☁️ OneDrive Connection</h2>
@@ -300,8 +314,7 @@ input.filled{border-color:#10b981;background:#f0fdf4}
       <div id="adminEvents"><p style="font-size:13px;color:#94a3b8">No events yet</p></div>
     </div>
 
-    <button class="btn btn-danger btn-sm" onclick="adminLogout()">Logout Admin</button>
-  </div>
+  </div><!-- end adminPanel -->
 </div>
 
 <div class="snack snack-info" id="sbar"></div>
@@ -332,27 +345,24 @@ let sr = null, af = null;
 // ─── AUTH: implicit flow (no library needed) ──────────────────────────────────
 function initMsal() {
   const hash = window.location.hash;
-  console.log('Hash on load:', hash); // debug
+  console.log('Hash on load:', hash);
   if (hash && hash.includes('access_token')) {
-    const params = new URLSearchParams(hash.substring(1)); // remove leading #
-    const token = params.get('access_token');
-    const error = params.get('error');
-    const errDesc = params.get('error_description');
+    const params = new URLSearchParams(hash.substring(1));
+    const token  = params.get('access_token');
+    const error  = params.get('error');
     if (error) {
-      console.error('MS Auth error:', error, errDesc);
-      toast('❌ Login error: ' + error, 'err');
-      window.location.hash = '';
+      toast('❌ Login error: ' + params.get('error_description'), 'err');
+      history.replaceState(null, '', window.location.pathname);
       return;
     }
     if (token) {
-      console.log('Token received ✅');
       sessionStorage.setItem(TOKEN_KEY, token);
-      history.replaceState(null, '', window.location.pathname); // clean URL without reload
-      loadMsUser(token);
+      history.replaceState(null, '', window.location.pathname); // clean URL
+      loadMsUser(token).then(() => showTab('admin')); // ← go straight to admin
     }
   } else {
     const saved = sessionStorage.getItem(TOKEN_KEY);
-    if (saved) loadMsUser(saved);
+    if (saved) loadMsUser(saved); // restore session silently
   }
 }
 
@@ -376,18 +386,33 @@ async function loadMsUser(token) {
 
     msToken = token;
     msUser  = { name: u.displayName, email };
-    document.getElementById('msUserName').textContent  = msUser.name;
+
+    // Update header badge
+    document.getElementById('msUserName').textContent    = msUser.name;
     document.getElementById('msUserBadge').style.display = 'flex';
-    document.getElementById('odUserEmail').textContent = msUser.email;
+
+    // Update OD status
+    document.getElementById('odUserEmail').textContent      = msUser.email;
     document.getElementById('odConnected').style.display    = 'block';
     document.getElementById('odDisconnected').style.display = 'none';
+
+    // ── Auto-open admin panel immediately, skip password screen ──
+    showAdminPanel();
     updateSaveBtn();
+    updateBadge();
     toast('✅ Signed in as ' + msUser.email, 'ok');
+
+    // If we just returned from MS redirect, switch to admin tab automatically
+    if (window.location.hash === '' && sessionStorage.getItem('savic_redirect_tab') === 'admin') {
+      sessionStorage.removeItem('savic_redirect_tab');
+      showTab('admin');
+    }
   } catch(e) { sessionStorage.removeItem(TOKEN_KEY); }
 }
 
 function msSignIn() {
   const redirectUri = 'https://blue-water-00104b510.2.azurestaticapps.net';
+  sessionStorage.setItem('savic_redirect_tab', 'admin'); // remember to open admin after redirect
   const url = 'https://login.microsoftonline.com/' + TENANT + '/oauth2/v2.0/authorize'
     + '?client_id=' + CLIENT_ID
     + '&response_type=token'
@@ -396,8 +421,7 @@ function msSignIn() {
     + '&response_mode=fragment'
     + '&prompt=select_account'
     + '&nonce=' + Date.now();
-
-  console.log('MS Login URL:', url); // debug
+  console.log('MS Login URL:', url);
   window.location.href = url;
 }
 
@@ -802,19 +826,33 @@ function localAdminLogin() {
 
 function showAdminPanel() {
   document.getElementById('adminMsLogin').style.display = 'none';
-  document.getElementById('adminPanel').style.display = 'block';
-  // update OD status
+  document.getElementById('adminPanel').style.display   = 'block';
+  document.getElementById('adminUserLabel').textContent = msUser ? msUser.email : 'Local Admin';
   if (msUser) {
-    document.getElementById('odConnected').style.display = 'block';
+    document.getElementById('odConnected').style.display    = 'block';
     document.getElementById('odDisconnected').style.display = 'none';
   }
   renderAdminEvents();
 }
 
 function adminLogout() {
+  if (!confirm('Sign out of admin?')) return;
+  // Clear all auth state
+  msToken = null; msUser = null;
+  sessionStorage.removeItem(TOKEN_KEY);
+  sessionStorage.removeItem('savic_redirect_tab');
+  // Reset UI
   document.getElementById('adminMsLogin').style.display = 'block';
-  document.getElementById('adminPanel').style.display = 'none';
-  document.getElementById('adminPass').value = '';
+  document.getElementById('adminPanel').style.display   = 'none';
+  document.getElementById('adminPass').value            = '';
+  document.getElementById('msUserBadge').style.display  = 'none';
+  document.getElementById('odConnected').style.display    = 'none';
+  document.getElementById('odDisconnected').style.display = 'block';
+  updateSaveBtn();
+  toast('Signed out successfully');
+  // Sign out from Microsoft session too
+  window.location.href = `https://login.microsoftonline.com/${TENANT}/oauth2/v2.0/logout`
+    + `?post_logout_redirect_uri=${encodeURIComponent('https://blue-water-00104b510.2.azurestaticapps.net')}`;
 }
 
 function genToken() {
