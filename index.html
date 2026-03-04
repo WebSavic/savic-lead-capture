@@ -3,364 +3,341 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
-<meta name="theme-color" content="#1e3a8a"/>
-<meta name="mobile-web-app-capable" content="yes"/>
-<meta name="apple-mobile-web-app-capable" content="yes"/>
-<title>SAVIC Lead Capture Pro</title>
+<title>SAVIC Lead Capture</title>
 <style>
-*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-body{font-family:'Segoe UI',sans-serif;background:#f0f4ff;min-height:100vh;max-width:480px;margin:0 auto}
-#app{min-height:100vh}
-.hdr{background:linear-gradient(135deg,#1e3a8a,#3b82f6);padding:18px 16px 14px;color:#fff;position:sticky;top:0;z-index:100;box-shadow:0 2px 12px rgba(30,58,138,.3)}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Segoe UI,sans-serif;background:#f0f4ff;max-width:480px;margin:0 auto;min-height:100vh}
+.hdr{background:linear-gradient(135deg,#1e3a8a,#3b82f6);padding:16px;color:#fff;position:sticky;top:0;z-index:99}
 .hdr-row{display:flex;align-items:center;gap:10px}
-.back-btn{background:rgba(255,255,255,.2);border:none;color:#fff;width:34px;height:34px;border-radius:50%;font-size:17px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-.hdr-title{font-size:17px;font-weight:700}
-.hdr-sub{font-size:11px;opacity:.8;margin-top:2px}
-.pg{padding:16px;padding-bottom:50px;display:none}
-.pg.active{display:block}
-.hero{background:#fff;border-radius:18px;padding:22px 18px;text-align:center;margin-bottom:16px;box-shadow:0 2px 10px rgba(0,0,0,.07)}
-.hero-icon{font-size:48px;margin-bottom:6px}
-.hero-title{font-size:18px;font-weight:700;color:#1e3a8a}
-.hero-sub{color:#64748b;font-size:13px;margin-top:5px}
-.sec-label{font-size:12px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;margin-top:4px}
-.white-box{background:#fff;border-radius:14px;padding:14px 16px;margin-bottom:14px;box-shadow:0 2px 8px rgba(0,0,0,.06)}
-.white-box label{font-size:13px;font-weight:600;color:#1e3a8a;display:block;margin-bottom:6px}
-.inp{width:100%;border:1.5px solid #e2e8f0;border-radius:10px;padding:10px 12px;font-size:15px;outline:none;font-family:inherit;color:#334155;background:#fff}
-.inp:focus{border-color:#3b82f6}
-textarea.inp{resize:none}
-.btn{width:100%;border:none;border-radius:14px;padding:15px;font-size:15px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:12px}
+.back{width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,.2);border:none;color:#fff;font-size:18px;cursor:pointer;flex-shrink:0}
+.pg{padding:16px 16px 60px}
+.hidden{display:none}
+.card{background:#fff;border-radius:16px;padding:20px;text-align:center;margin-bottom:16px;box-shadow:0 2px 8px rgba(0,0,0,.08)}
+.card h2{color:#1e3a8a;font-size:18px;margin-top:8px}
+.card p{color:#64748b;font-size:13px;margin-top:4px}
+.box{background:#fff;border-radius:12px;padding:14px;margin-bottom:12px;box-shadow:0 1px 6px rgba(0,0,0,.07)}
+.box label{font-size:13px;font-weight:600;color:#1e3a8a;display:block;margin-bottom:6px}
+input[type=text],input[type=tel],input[type=email],input[type=url],textarea{width:100%;padding:10px 12px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:15px;font-family:inherit;color:#334155;outline:none}
+input:focus,textarea:focus{border-color:#3b82f6}
+textarea{resize:none}
+.row{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+.field-label{font-weight:600;color:#1e3a8a;font-size:13px}
+.req{color:#ef4444}
+.mic{border:none;border-radius:8px;padding:5px 10px;font-size:12px;font-weight:600;cursor:pointer;background:#eff6ff;color:#3b82f6}
+.mic.on{background:#f59e0b;color:#fff}
+.fbox{background:#fff;border-radius:12px;padding:12px 14px;margin-bottom:11px;box-shadow:0 1px 6px rgba(0,0,0,.07);border:2px solid transparent}
+.fbox.lit{border-color:#f59e0b}
+.vbanner{background:#eff6ff;border:2px solid #bfdbfe;border-radius:10px;padding:10px 12px;margin-bottom:14px;font-size:12px;color:#1e40af;display:flex;align-items:center;gap:8px}
+.vbanner.on{background:#fef3c7;border-color:#f59e0b;color:#92400e}
+.lirow{display:flex;gap:8px}
+.libtn{border:none;border-radius:8px;padding:8px 12px;font-size:12px;font-weight:700;cursor:pointer;background:#0a66c2;color:#fff;flex-shrink:0}
+.savebtn{width:100%;border:none;border-radius:12px;padding:15px;font-size:16px;font-weight:700;cursor:pointer;background:linear-gradient(135deg,#1e3a8a,#3b82f6);color:#fff;margin-top:8px}
+.savebtn.done{background:#22c55e}
+.btn{width:100%;border:none;border-radius:12px;padding:14px;font-size:15px;font-weight:700;cursor:pointer;margin-bottom:11px;display:flex;align-items:center;justify-content:center;gap:8px}
 .btn-blue{background:linear-gradient(135deg,#1e3a8a,#3b82f6);color:#fff}
 .btn-green{background:#16a34a;color:#fff}
 .btn-purple{background:#7c3aed;color:#fff}
-.fcard{background:#fff;border-radius:14px;padding:13px 15px;margin-bottom:12px;box-shadow:0 2px 8px rgba(0,0,0,.06);border:2px solid transparent}
-.fcard.listening{border-color:#f59e0b}
-.frow{display:flex;align-items:center;justify-content:space-between;margin-bottom:7px}
-.flabel{font-weight:600;color:#1e3a8a;font-size:13px}
-.req{color:#ef4444}
-.mic-btn{border:none;border-radius:9px;padding:6px 11px;cursor:pointer;font-size:12px;font-weight:600;background:#eff6ff;color:#3b82f6}
-.mic-btn.on{background:#f59e0b;color:#fff}
-.voice-banner{border-radius:12px;padding:10px 14px;margin-bottom:14px;display:flex;align-items:center;gap:8px;font-size:12px;background:#eff6ff;border:2px solid #bfdbfe;color:#1e40af}
-.voice-banner.on{background:#fef3c7;border-color:#f59e0b;color:#92400e}
-.li-row{display:flex;gap:8px;align-items:center}
-.li-btn{flex-shrink:0;border:none;border-radius:9px;padding:8px 12px;font-size:12px;font-weight:700;cursor:pointer;background:#0a66c2;color:#fff}
-.save-btn{background:linear-gradient(135deg,#1e3a8a,#3b82f6);color:#fff;border:none;border-radius:14px;padding:16px;font-size:16px;font-weight:700;cursor:pointer;width:100%;margin-top:6px}
-.save-btn.saved{background:#22c55e}
-.ev-card{background:#fff;border-radius:14px;padding:14px 16px;margin-bottom:10px;box-shadow:0 2px 8px rgba(0,0,0,.06)}
-.ev-name{font-weight:700;color:#1e3a8a;font-size:15px}
-.ev-meta{font-size:12px;color:#64748b;margin-top:3px}
-.ev-actions{display:flex;gap:6px;margin-top:10px}
-.ev-btn{flex:1;border:none;border-radius:9px;padding:8px 4px;font-size:11px;font-weight:600;cursor:pointer}
-.ev-add{background:#eff6ff;color:#1e3a8a}
-.ev-view{background:#dcfce7;color:#16a34a}
-.ev-exp{background:#f0fdf4;color:#16a34a}
-.ev-del{background:#fee2e2;color:#ef4444}
-.lead-card{background:#fff;border-radius:12px;padding:13px 14px;margin-bottom:10px;box-shadow:0 2px 6px rgba(0,0,0,.06);border-left:4px solid #3b82f6}
-.lead-name{font-weight:700;font-size:14px;color:#1e3a8a}
-.lead-det{font-size:12px;color:#475569;margin-top:3px}
-.lead-req{font-size:12px;color:#64748b;margin-top:5px;background:#f8fafc;border-radius:7px;padding:5px 9px}
-.lead-time{font-size:10px;color:#94a3b8;margin-top:4px}
-.lead-row{display:flex;justify-content:space-between;align-items:flex-start}
-.del-btn{background:#fee2e2;border:none;color:#ef4444;border-radius:7px;padding:6px 9px;font-size:13px;cursor:pointer;flex-shrink:0;margin-left:6px}
-.info-box{background:#eff6ff;border:1.5px solid #bfdbfe;border-radius:12px;padding:12px 14px;font-size:12px;color:#1e40af;margin-bottom:12px;line-height:1.6}
-.toast{position:fixed;top:18px;left:50%;transform:translateX(-50%);color:#fff;padding:9px 20px;border-radius:30px;font-weight:600;z-index:9999;font-size:13px;box-shadow:0 4px 18px rgba(0,0,0,.2);display:none;max-width:90vw;text-align:center;white-space:nowrap}
-.toast.ok{background:#22c55e}
-.toast.err{background:#ef4444}
-.empty{text-align:center;padding:40px 20px;color:#94a3b8}
-.badge{background:#3b82f6;color:#fff;border-radius:20px;padding:1px 8px;font-size:11px;margin-left:6px}
+.evcard{background:#fff;border-radius:12px;padding:13px 14px;margin-bottom:10px;box-shadow:0 1px 6px rgba(0,0,0,.07)}
+.evname{font-weight:700;color:#1e3a8a;font-size:14px}
+.evmeta{font-size:12px;color:#64748b;margin-top:3px}
+.evbtns{display:flex;gap:5px;margin-top:9px}
+.evbtn{flex:1;border:none;border-radius:8px;padding:7px 3px;font-size:11px;font-weight:600;cursor:pointer}
+.eb1{background:#eff6ff;color:#1e3a8a}
+.eb2{background:#dcfce7;color:#16a34a}
+.eb3{background:#f0fdf4;color:#16a34a}
+.eb4{background:#fee2e2;color:#ef4444}
+.lcard{background:#fff;border-radius:11px;padding:12px 13px;margin-bottom:9px;box-shadow:0 1px 6px rgba(0,0,0,.07);border-left:4px solid #3b82f6}
+.lrow{display:flex;justify-content:space-between;align-items:flex-start}
+.lname{font-weight:700;font-size:13px;color:#1e3a8a}
+.ldet{font-size:12px;color:#475569;margin-top:2px}
+.lreq{font-size:11px;color:#64748b;margin-top:4px;background:#f8fafc;border-radius:6px;padding:4px 8px}
+.ltime{font-size:10px;color:#94a3b8;margin-top:3px}
+.delbtn{background:#fee2e2;border:none;color:#ef4444;border-radius:7px;padding:5px 8px;font-size:12px;cursor:pointer;flex-shrink:0;margin-left:6px}
+.infobox{background:#eff6ff;border:1.5px solid #bfdbfe;border-radius:10px;padding:11px 13px;font-size:12px;color:#1e40af;margin-bottom:12px}
+.empty{text-align:center;padding:40px 16px;color:#94a3b8}
+.toast{position:fixed;top:16px;left:50%;transform:translateX(-50%);padding:9px 20px;border-radius:30px;font-weight:600;font-size:13px;color:#fff;box-shadow:0 3px 14px rgba(0,0,0,.2);z-index:999;display:none;white-space:nowrap}
+.tok{background:#22c55e}.terr{background:#ef4444}
+.sec{font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.6px;margin-bottom:9px}
+.badge{background:#3b82f6;color:#fff;border-radius:20px;padding:1px 8px;font-size:11px;margin-left:5px}
 </style>
 </head>
 <body>
-<div id="app">
-  <div class="hdr">
-    <div class="hdr-row">
-      <button class="back-btn" id="back-btn" style="display:none" onclick="navBack()">&#8592;</button>
-      <div style="flex:1">
-        <div class="hdr-title">SAVIC Lead Capture Pro</div>
-        <div class="hdr-sub" id="hdr-sub">SAP Workshop Lead Manager</div>
-      </div>
-    </div>
-  </div>
-  <div class="toast" id="toast"></div>
 
-  <!-- HOME -->
-  <div class="pg active" id="pg-home">
-    <div class="hero">
-      <div class="hero-icon">&#127919;</div>
-      <div class="hero-title">SAVIC Lead Capture Pro</div>
-      <div class="hero-sub">Event-wise leads &bull; Voice input &bull; LinkedIn lookup &bull; Excel export</div>
-    </div>
-    <div class="sec-label">Create New Event</div>
-    <div class="white-box">
-      <label>Event Name</label>
-      <input class="inp" type="text" id="inp-ev" placeholder="e.g. SAP S/4HANA Workshop Mumbai Mar 2026" onkeydown="if(event.key==='Enter')createEvent()"/>
-      <button class="btn btn-blue" style="margin-top:10px;margin-bottom:0" onclick="createEvent()">&#128640; Create Event</button>
-    </div>
-    <div class="sec-label">My Events <span class="badge" id="ev-badge">0</span></div>
-    <div id="events-list"></div>
-    <div id="export-all-wrap" style="display:none;margin-top:4px">
-      <button class="btn btn-purple" onclick="exportAll()">&#128218; Export ALL Events &mdash; Master Excel</button>
+<div class="hdr">
+  <div class="hdr-row">
+    <button class="back hidden" id="backBtn" onclick="goBack()">&#8592;</button>
+    <div style="flex:1">
+      <div style="font-size:16px;font-weight:700">SAVIC Lead Capture</div>
+      <div id="hdrSub" style="font-size:11px;opacity:.8;margin-top:1px">SAP Workshop Lead Manager</div>
     </div>
   </div>
+</div>
 
-  <!-- CAPTURE -->
-  <div class="pg" id="pg-capture">
-    <div class="voice-banner" id="voice-banner">
-      <span>&#128161;</span>
-      <span id="banner-txt">Tap mic button next to any field for voice input</span>
-    </div>
-    <div class="fcard" id="card-name">
-      <div class="frow"><span class="flabel">&#128100; Full Name <span class="req">*</span></span><button class="mic-btn" id="mic-name" onclick="toggleVoice('name')">&#127908; Voice</button></div>
-      <input class="inp" type="text" id="f-name" placeholder="e.g. Rajesh Kumar"/>
-    </div>
-    <div class="fcard" id="card-company">
-      <div class="frow"><span class="flabel">&#127970; Company <span class="req">*</span></span><button class="mic-btn" id="mic-company" onclick="toggleVoice('company')">&#127908; Voice</button></div>
-      <input class="inp" type="text" id="f-company" placeholder="e.g. Tata Consultancy Services"/>
-    </div>
-    <div class="fcard" id="card-phone">
-      <div class="frow"><span class="flabel">&#128222; Phone</span><button class="mic-btn" id="mic-phone" onclick="toggleVoice('phone')">&#127908; Voice</button></div>
-      <input class="inp" type="tel" id="f-phone" placeholder="e.g. 9876543210"/>
-    </div>
-    <div class="fcard" id="card-email">
-      <div class="frow"><span class="flabel">&#9993; Email</span><button class="mic-btn" id="mic-email" onclick="toggleVoice('email')">&#127908; Voice</button></div>
-      <input class="inp" type="email" id="f-email" placeholder="e.g. rajesh@tcs.com"/>
-    </div>
-    <div class="fcard" id="card-requirements">
-      <div class="frow"><span class="flabel">&#128203; Requirements</span><button class="mic-btn" id="mic-requirements" onclick="toggleVoice('requirements')">&#127908; Voice</button></div>
-      <textarea class="inp" id="f-requirements" rows="3" placeholder="SAP module, budget, timeline..."></textarea>
-    </div>
-    <div class="fcard">
-      <div class="flabel" style="margin-bottom:8px">&#128279; LinkedIn Profile</div>
-      <div class="li-row">
-        <input class="inp" type="url" id="f-linkedin" placeholder="Paste URL or use Search"/>
-        <button class="li-btn" onclick="searchLinkedIn()">&#128269; Search</button>
-      </div>
-      <div id="li-status" style="font-size:11px;color:#64748b;margin-top:5px"></div>
-    </div>
-    <button class="save-btn" id="save-btn" onclick="saveLead()">&#128190; Save Lead</button>
-  </div>
+<div id="toast" class="toast"></div>
 
-  <!-- LEADS -->
-  <div class="pg" id="pg-leads">
-    <div class="info-box" id="ev-infobox"></div>
-    <button class="btn btn-blue" style="margin-bottom:10px" onclick="goCapture()">&#43; Add Lead</button>
-    <button class="btn btn-green" style="margin-bottom:16px" onclick="exportCurrentEvent()">&#128202; Export This Event to Excel</button>
-    <div id="leads-list"></div>
+<!-- HOME -->
+<div id="pgHome" class="pg">
+  <div class="card">
+    <div style="font-size:44px">&#127919;</div>
+    <h2>SAVIC Lead Capture Pro</h2>
+    <p>Event-wise leads &bull; Voice input &bull; LinkedIn &bull; Excel export</p>
   </div>
+  <div class="sec">Create New Event</div>
+  <div class="box">
+    <label>Event Name</label>
+    <input type="text" id="inpEv" placeholder="e.g. SAP Workshop Mumbai Mar 2026"/>
+    <button class="btn btn-blue" style="margin-top:10px;margin-bottom:0" onclick="createEvent()">&#128640; Create Event</button>
+  </div>
+  <div class="sec">My Events <span class="badge" id="evBadge">0</span></div>
+  <div id="evList"></div>
+  <div id="exportAllWrap" class="hidden">
+    <button class="btn btn-purple" onclick="exportAll()">&#128218; Export ALL Events &mdash; Master Excel</button>
+  </div>
+</div>
+
+<!-- CAPTURE -->
+<div id="pgCapture" class="pg hidden">
+  <div class="vbanner" id="vBanner">
+    <span>&#128161;</span><span id="vBannerTxt">Tap Voice button next to any field</span>
+  </div>
+  <div class="fbox" id="cName">
+    <div class="row"><span class="field-label">&#128100; Full Name <span class="req">*</span></span><button class="mic" id="mName" onclick="toggleMic('name')">&#127908; Voice</button></div>
+    <input type="text" id="fName" placeholder="e.g. Rajesh Kumar"/>
+  </div>
+  <div class="fbox" id="cCompany">
+    <div class="row"><span class="field-label">&#127970; Company <span class="req">*</span></span><button class="mic" id="mCompany" onclick="toggleMic('company')">&#127908; Voice</button></div>
+    <input type="text" id="fCompany" placeholder="e.g. Tata Consultancy Services"/>
+  </div>
+  <div class="fbox" id="cPhone">
+    <div class="row"><span class="field-label">&#128222; Phone</span><button class="mic" id="mPhone" onclick="toggleMic('phone')">&#127908; Voice</button></div>
+    <input type="tel" id="fPhone" placeholder="e.g. 9876543210"/>
+  </div>
+  <div class="fbox" id="cEmail">
+    <div class="row"><span class="field-label">&#9993; Email</span><button class="mic" id="mEmail" onclick="toggleMic('email')">&#127908; Voice</button></div>
+    <input type="email" id="fEmail" placeholder="e.g. rajesh@tcs.com"/>
+  </div>
+  <div class="fbox" id="cRequirements">
+    <div class="row"><span class="field-label">&#128203; Requirements</span><button class="mic" id="mRequirements" onclick="toggleMic('requirements')">&#127908; Voice</button></div>
+    <textarea id="fRequirements" rows="3" placeholder="SAP module, budget, timeline..."></textarea>
+  </div>
+  <div class="fbox">
+    <div class="field-label" style="margin-bottom:7px">&#128279; LinkedIn</div>
+    <div class="lirow">
+      <input type="url" id="fLinkedin" placeholder="Paste URL or Search"/>
+      <button class="libtn" onclick="searchLI()">&#128269; Search</button>
+    </div>
+    <div id="liStatus" style="font-size:11px;color:#64748b;margin-top:5px"></div>
+  </div>
+  <button class="savebtn" id="saveBtn" onclick="saveLead()">&#128190; Save Lead</button>
+</div>
+
+<!-- LEADS -->
+<div id="pgLeads" class="pg hidden">
+  <div class="infobox" id="evInfo"></div>
+  <button class="btn btn-blue" style="margin-bottom:10px" onclick="goCapture()">&#43; Add Lead</button>
+  <button class="btn btn-green" style="margin-bottom:16px" onclick="exportCurrent()">&#128202; Export This Event to Excel</button>
+  <div id="leadsList"></div>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
 var db = [];
-var curIdx = null;
-var recog = null;
-var activeField = null;
+var ci = null;
+var sr = null;
+var af = null;
 
-function loadDb() { try { db = JSON.parse(localStorage.getItem('savic_db') || '[]'); } catch(e) { db = []; } }
-function saveDb() { localStorage.setItem('savic_db', JSON.stringify(db)); }
+function ld() { try { db = JSON.parse(localStorage.getItem('sv5') || '[]'); } catch(e) { db = []; } }
+function sd() { localStorage.setItem('sv5', JSON.stringify(db)); }
+function x(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
-function showToast(msg, type) {
+function toast(m, e) {
   var t = document.getElementById('toast');
-  t.textContent = msg;
-  t.className = 'toast ' + (type || 'ok');
+  t.textContent = m; t.className = 'toast ' + (e ? 'terr' : 'tok');
   t.style.display = 'block';
-  clearTimeout(t._t);
-  t._t = setTimeout(function() { t.style.display = 'none'; }, 2500);
+  clearTimeout(t.tid);
+  t.tid = setTimeout(function(){ t.style.display='none'; }, 2500);
 }
 
-function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-
-function showPage(id) {
-  var pages = document.querySelectorAll('.pg');
-  for (var i = 0; i < pages.length; i++) pages[i].classList.remove('active');
-  document.getElementById(id).classList.add('active');
-  document.getElementById('back-btn').style.display = id === 'pg-home' ? 'none' : 'flex';
+function show(id) {
+  ['pgHome','pgCapture','pgLeads'].forEach(function(p){ document.getElementById(p).classList.add('hidden'); });
+  document.getElementById(id).classList.remove('hidden');
+  document.getElementById('backBtn').classList[id==='pgHome'?'add':'remove']('hidden');
 }
 
-function navBack() {
-  stopVoice();
-  if (document.getElementById('pg-capture').classList.contains('active')) {
-    renderLeads(); showPage('pg-leads');
+function goBack() {
+  stopMic();
+  if (!document.getElementById('pgCapture').classList.contains('hidden')) {
+    renderLeads(); show('pgLeads');
   } else {
-    curIdx = null;
-    document.getElementById('hdr-sub').textContent = 'SAP Workshop Lead Manager';
-    renderEvents(); showPage('pg-home');
+    ci = null;
+    document.getElementById('hdrSub').textContent = 'SAP Workshop Lead Manager';
+    renderEvents(); show('pgHome');
   }
 }
 
 function createEvent() {
-  var name = document.getElementById('inp-ev').value.trim();
-  if (!name) { showToast('Enter an event name!', 'err'); return; }
-  for (var i = 0; i < db.length; i++) { if (db[i].name === name) { showToast('Event already exists!', 'err'); return; } }
-  db.unshift({ name: name, leads: [], created: new Date().toLocaleString('en-IN') });
-  saveDb();
-  document.getElementById('inp-ev').value = '';
-  showToast('Event created!');
-  renderEvents();
+  var n = document.getElementById('inpEv').value.trim();
+  if (!n) { toast('Enter event name!', 1); return; }
+  for (var i=0;i<db.length;i++) { if(db[i].name===n){ toast('Already exists!',1); return; } }
+  db.unshift({name:n, leads:[], created:new Date().toLocaleString('en-IN')});
+  sd(); document.getElementById('inpEv').value=''; toast('Event created!'); renderEvents();
 }
 
 function renderEvents() {
-  var n = db.length;
-  document.getElementById('ev-badge').textContent = n;
-  document.getElementById('export-all-wrap').style.display = n ? 'block' : 'none';
-  var el = document.getElementById('events-list');
-  if (!n) { el.innerHTML = '<div class="empty"><div style="font-size:44px">&#128195;</div><div style="font-weight:600;margin-top:10px">No events yet</div><div style="font-size:12px;margin-top:4px">Create your first event above</div></div>'; return; }
-  var html = '';
-  for (var i = 0; i < db.length; i++) {
-    var ev = db[i];
-    html += '<div class="ev-card">' +
-      '<div class="ev-name">&#128197; ' + esc(ev.name) + '</div>' +
-      '<div class="ev-meta">' + ev.leads.length + ' lead' + (ev.leads.length !== 1 ? 's' : '') + ' &middot; ' + esc(ev.created) + '</div>' +
-      '<div class="ev-actions">' +
-        '<button class="ev-btn ev-add" onclick="openCapture(' + i + ')">+ Add</button>' +
-        '<button class="ev-btn ev-view" onclick="openLeads(' + i + ')">&#128101; View</button>' +
-        '<button class="ev-btn ev-exp" onclick="exportEvent(' + i + ')">&#128202; Export</button>' +
-        '<button class="ev-btn ev-del" onclick="deleteEvent(' + i + ')">&#128465;</button>' +
+  document.getElementById('evBadge').textContent = db.length;
+  document.getElementById('exportAllWrap').classList[db.length?'remove':'add']('hidden');
+  var el = document.getElementById('evList');
+  if (!db.length) { el.innerHTML='<div class="empty"><div style="font-size:40px">&#128195;</div><div style="font-weight:600;margin-top:8px">No events yet</div></div>'; return; }
+  var h='';
+  for (var i=0;i<db.length;i++) {
+    var ev=db[i];
+    h+='<div class="evcard">'+
+      '<div class="evname">&#128197; '+x(ev.name)+'</div>'+
+      '<div class="evmeta">'+ev.leads.length+' lead'+(ev.leads.length!==1?'s':'')+' &middot; '+x(ev.created)+'</div>'+
+      '<div class="evbtns">'+
+        '<button class="evbtn eb1" onclick="openCapture('+i+')">+ Add</button>'+
+        '<button class="evbtn eb2" onclick="openLeads('+i+')">&#128101; View</button>'+
+        '<button class="evbtn eb3" onclick="exportEv('+i+')">&#128202; Export</button>'+
+        '<button class="evbtn eb4" onclick="delEv('+i+')">&#128465;</button>'+
       '</div></div>';
   }
-  el.innerHTML = html;
+  el.innerHTML=h;
 }
 
-function openCapture(i) { curIdx = i; document.getElementById('hdr-sub').textContent = db[i].name; clearForm(); showPage('pg-capture'); }
-function goCapture() { clearForm(); showPage('pg-capture'); }
-function openLeads(i) { curIdx = i; document.getElementById('hdr-sub').textContent = db[i].name; renderLeads(); showPage('pg-leads'); }
+function openCapture(i) { ci=i; document.getElementById('hdrSub').textContent=db[i].name; clearForm(); show('pgCapture'); }
+function goCapture() { clearForm(); show('pgCapture'); }
+function openLeads(i) { ci=i; document.getElementById('hdrSub').textContent=db[i].name; renderLeads(); show('pgLeads'); }
 
-function deleteEvent(i) {
-  if (!confirm('Delete "' + db[i].name + '" and all its leads?')) return;
-  db.splice(i, 1); saveDb(); renderEvents(); showToast('Event deleted');
+function delEv(i) {
+  if (!confirm('Delete "'+db[i].name+'" and all leads?')) return;
+  db.splice(i,1); sd(); renderEvents(); toast('Deleted');
 }
 
 function renderLeads() {
-  var ev = db[curIdx];
-  document.getElementById('ev-infobox').innerHTML = '<b>' + esc(ev.name) + '</b> &middot; ' + ev.leads.length + ' lead' + (ev.leads.length !== 1 ? 's' : '') + ' &middot; ' + esc(ev.created);
-  var el = document.getElementById('leads-list');
-  if (!ev.leads.length) { el.innerHTML = '<div class="empty"><div style="font-size:44px">&#128101;</div><div style="font-weight:600;margin-top:10px">No leads yet</div></div>'; return; }
-  var html = '';
-  for (var i = ev.leads.length - 1; i >= 0; i--) {
-    var l = ev.leads[i];
-    html += '<div class="lead-card"><div class="lead-row"><div style="flex:1">' +
-      '<div class="lead-name">&#128100; ' + esc(l.name) + '</div>' +
-      '<div class="lead-det">&#127970; ' + esc(l.company) + '</div>' +
-      (l.phone ? '<div class="lead-det">&#128222; ' + esc(l.phone) + '</div>' : '') +
-      (l.email ? '<div class="lead-det">&#9993; ' + esc(l.email) + '</div>' : '') +
-      (l.requirements ? '<div class="lead-req">&#128203; ' + esc(l.requirements) + '</div>' : '') +
-      (l.linkedin ? '<div style="font-size:11px;margin-top:4px"><a href="' + esc(l.linkedin) + '" target="_blank" style="color:#0a66c2">&#128279; LinkedIn</a></div>' : '') +
-      '<div class="lead-time">&#128336; ' + esc(l.datetime) + '</div>' +
-      '</div><button class="del-btn" onclick="deleteLead(' + i + ')">&#128465;</button></div></div>';
+  var ev=db[ci];
+  document.getElementById('evInfo').innerHTML='<b>'+x(ev.name)+'</b> &middot; '+ev.leads.length+' lead'+(ev.leads.length!==1?'s':'')+' &middot; '+x(ev.created);
+  var el=document.getElementById('leadsList');
+  if (!ev.leads.length) { el.innerHTML='<div class="empty"><div style="font-size:40px">&#128101;</div><div style="font-weight:600;margin-top:8px">No leads yet</div></div>'; return; }
+  var h='';
+  for (var i=ev.leads.length-1;i>=0;i--) {
+    var l=ev.leads[i];
+    h+='<div class="lcard"><div class="lrow"><div style="flex:1">'+
+      '<div class="lname">&#128100; '+x(l.name)+'</div>'+
+      '<div class="ldet">&#127970; '+x(l.company)+'</div>'+
+      (l.phone?'<div class="ldet">&#128222; '+x(l.phone)+'</div>':'')+
+      (l.email?'<div class="ldet">&#9993; '+x(l.email)+'</div>':'')+
+      (l.requirements?'<div class="lreq">&#128203; '+x(l.requirements)+'</div>':'')+
+      (l.linkedin?'<div style="font-size:11px;margin-top:3px"><a href="'+x(l.linkedin)+'" target="_blank" style="color:#0a66c2">&#128279; LinkedIn</a></div>':'')+
+      '<div class="ltime">&#128336; '+x(l.datetime)+'</div>'+
+      '</div><button class="delbtn" onclick="delLead('+i+')">&#128465;</button></div></div>';
   }
-  el.innerHTML = html;
+  el.innerHTML=h;
 }
 
 function saveLead() {
-  var name = document.getElementById('f-name').value.trim();
-  var company = document.getElementById('f-company').value.trim();
-  if (!name || !company) { showToast('Name and Company required!', 'err'); return; }
-  var lead = { name:name, company:company, phone:document.getElementById('f-phone').value.trim(), email:document.getElementById('f-email').value.trim(), requirements:document.getElementById('f-requirements').value.trim(), linkedin:document.getElementById('f-linkedin').value.trim(), datetime:new Date().toLocaleString('en-IN') };
-  db[curIdx].leads.push(lead);
-  saveDb();
-  var btn = document.getElementById('save-btn');
-  btn.textContent = 'Saved!'; btn.classList.add('saved');
-  showToast('Lead saved!');
-  setTimeout(function() { btn.textContent = 'Save Lead'; btn.classList.remove('saved'); clearForm(); }, 800);
+  var n=document.getElementById('fName').value.trim();
+  var c=document.getElementById('fCompany').value.trim();
+  if(!n||!c){ toast('Name and Company required!',1); return; }
+  var lead={name:n,company:c,phone:document.getElementById('fPhone').value.trim(),email:document.getElementById('fEmail').value.trim(),requirements:document.getElementById('fRequirements').value.trim(),linkedin:document.getElementById('fLinkedin').value.trim(),datetime:new Date().toLocaleString('en-IN')};
+  db[ci].leads.push(lead); sd();
+  var btn=document.getElementById('saveBtn');
+  btn.textContent='Saved!'; btn.classList.add('done');
+  toast('Lead saved!');
+  setTimeout(function(){ btn.textContent='Save Lead'; btn.classList.remove('done'); clearForm(); }, 900);
 }
 
-function deleteLead(i) {
-  if (!confirm('Remove this lead?')) return;
-  db[curIdx].leads.splice(i, 1); saveDb(); renderLeads(); showToast('Lead removed');
+function delLead(i) {
+  if(!confirm('Remove this lead?')) return;
+  db[ci].leads.splice(i,1); sd(); renderLeads(); toast('Removed');
 }
 
 function buildRows(ev) {
-  var rows = [];
-  for (var i = 0; i < ev.leads.length; i++) {
-    var l = ev.leads[i];
-    rows.push({ 'Sr.No.':i+1, 'Event':ev.name, 'Full Name':l.name, 'Company':l.company, 'Phone':l.phone, 'Email':l.email, 'Requirements':l.requirements, 'LinkedIn':l.linkedin, 'Date & Time':l.datetime });
+  var r=[];
+  for(var i=0;i<ev.leads.length;i++){
+    var l=ev.leads[i];
+    r.push({'Sr.No.':i+1,'Event':ev.name,'Full Name':l.name,'Company':l.company,'Phone':l.phone,'Email':l.email,'Requirements':l.requirements,'LinkedIn':l.linkedin,'Date & Time':l.datetime});
   }
-  return rows;
+  return r;
 }
-function makeWs(rows) {
-  var ws = XLSX.utils.json_to_sheet(rows);
-  ws['!cols'] = [{wch:5},{wch:28},{wch:20},{wch:26},{wch:14},{wch:26},{wch:36},{wch:40},{wch:22}];
-  return ws;
+function mWs(rows){ var ws=XLSX.utils.json_to_sheet(rows); ws['!cols']=[{wch:5},{wch:28},{wch:20},{wch:26},{wch:14},{wch:26},{wch:36},{wch:40},{wch:22}]; return ws; }
+
+function exportCurrent() {
+  if(!db[ci].leads.length){ toast('No leads!',1); return; }
+  var wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,mWs(buildRows(db[ci])),'Leads');
+  XLSX.writeFile(wb,'SAVIC_'+db[ci].name.replace(/\s+/g,'_').substring(0,40)+'_'+new Date().toISOString().slice(0,10)+'.xlsx');
+  toast('Exported!');
 }
-function exportCurrentEvent() {
-  if (!db[curIdx].leads.length) { showToast('No leads!', 'err'); return; }
-  var wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, makeWs(buildRows(db[curIdx])), 'Leads');
-  XLSX.writeFile(wb, 'SAVIC_' + db[curIdx].name.replace(/\s+/g,'_').substring(0,40) + '_' + new Date().toISOString().slice(0,10) + '.xlsx');
-  showToast('Exported!');
-}
-function exportEvent(i) {
-  if (!db[i].leads.length) { showToast('No leads in this event!', 'err'); return; }
-  var wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, makeWs(buildRows(db[i])), 'Leads');
-  XLSX.writeFile(wb, 'SAVIC_' + db[i].name.replace(/\s+/g,'_').substring(0,40) + '_' + new Date().toISOString().slice(0,10) + '.xlsx');
-  showToast('Exported!');
+function exportEv(i) {
+  if(!db[i].leads.length){ toast('No leads!',1); return; }
+  var wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,mWs(buildRows(db[i])),'Leads');
+  XLSX.writeFile(wb,'SAVIC_'+db[i].name.replace(/\s+/g,'_').substring(0,40)+'_'+new Date().toISOString().slice(0,10)+'.xlsx');
+  toast('Exported!');
 }
 function exportAll() {
-  var allRows = [];
-  var wb = XLSX.utils.book_new();
-  for (var i = 0; i < db.length; i++) {
-    if (!db[i].leads.length) continue;
-    var rows = buildRows(db[i]);
-    for (var j = 0; j < rows.length; j++) allRows.push(rows[j]);
-    XLSX.utils.book_append_sheet(wb, makeWs(rows), db[i].name.substring(0,28).replace(/[:\\\/\?\*\[\]]/g,''));
+  var all=[]; var wb=XLSX.utils.book_new();
+  for(var i=0;i<db.length;i++){
+    if(!db[i].leads.length) continue;
+    var rows=buildRows(db[i]);
+    for(var j=0;j<rows.length;j++) all.push(rows[j]);
+    XLSX.utils.book_append_sheet(wb,mWs(rows),db[i].name.substring(0,28).replace(/[:\\\/\?\*\[\]]/g,''));
   }
-  if (!allRows.length) { showToast('No leads to export!', 'err'); return; }
-  wb.SheetNames.unshift('ALL LEADS');
-  wb.Sheets['ALL LEADS'] = makeWs(allRows);
-  XLSX.writeFile(wb, 'SAVIC_Master_Leads_' + new Date().toISOString().slice(0,10) + '.xlsx');
-  showToast('Master Excel exported!');
+  if(!all.length){ toast('No leads!',1); return; }
+  wb.SheetNames.unshift('ALL LEADS'); wb.Sheets['ALL LEADS']=mWs(all);
+  XLSX.writeFile(wb,'SAVIC_Master_'+new Date().toISOString().slice(0,10)+'.xlsx');
+  toast('Master Excel exported!');
 }
 
-function toggleVoice(field) {
-  if (activeField === field) { stopVoice(); return; }
-  stopVoice();
-  var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!SR) { showToast('Voice not supported', 'err'); return; }
-  recog = new SR(); recog.lang = 'en-IN'; recog.continuous = false; recog.interimResults = false;
-  recog.onstart = function() {
-    activeField = field;
-    document.getElementById('card-' + field).classList.add('listening');
-    document.getElementById('mic-' + field).classList.add('on');
-    document.getElementById('mic-' + field).textContent = 'Stop';
-    document.getElementById('voice-banner').classList.add('on');
-    var labels = { name:'Full Name', company:'Company', phone:'Phone', email:'Email', requirements:'Requirements' };
-    document.getElementById('banner-txt').textContent = 'Listening for ' + labels[field] + '... speak now';
+function toggleMic(f) {
+  if(af===f){ stopMic(); return; }
+  stopMic();
+  var SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SR){ toast('Voice not supported',1); return; }
+  sr=new SR(); sr.lang='en-IN'; sr.continuous=false; sr.interimResults=false;
+  sr.onstart=function(){
+    af=f;
+    document.getElementById('c'+f.charAt(0).toUpperCase()+f.slice(1)).classList.add('lit');
+    document.getElementById('m'+f.charAt(0).toUpperCase()+f.slice(1)).classList.add('on');
+    document.getElementById('m'+f.charAt(0).toUpperCase()+f.slice(1)).textContent='Stop';
+    document.getElementById('vBanner').classList.add('on');
+    var lbl={name:'Full Name',company:'Company',phone:'Phone',email:'Email',requirements:'Requirements'};
+    document.getElementById('vBannerTxt').textContent='Listening for '+lbl[f]+'... speak now';
   };
-  recog.onresult = function(e) {
-    var txt = e.results[0][0].transcript;
-    var el = document.getElementById('f-' + field);
-    el.value = el.value ? el.value + ' ' + txt : txt;
+  sr.onresult=function(e){
+    var t=e.results[0][0].transcript;
+    var ids={name:'fName',company:'fCompany',phone:'fPhone',email:'fEmail',requirements:'fRequirements'};
+    var el=document.getElementById(ids[f]);
+    el.value=el.value?el.value+' '+t:t;
   };
-  recog.onerror = function() { showToast('Mic error', 'err'); stopVoice(); };
-  recog.onend = function() { stopVoice(); };
-  recog.start();
+  sr.onerror=function(){ toast('Mic error',1); stopMic(); };
+  sr.onend=function(){ stopMic(); };
+  sr.start();
 }
-function stopVoice() {
-  if (recog) { try { recog.stop(); } catch(e) {} recog = null; }
-  if (activeField) {
-    document.getElementById('card-' + activeField).classList.remove('listening');
-    document.getElementById('mic-' + activeField).classList.remove('on');
-    document.getElementById('mic-' + activeField).innerHTML = '&#127908; Voice';
+function stopMic(){
+  if(sr){ try{sr.stop();}catch(e){} sr=null; }
+  if(af){
+    var k=af.charAt(0).toUpperCase()+af.slice(1);
+    document.getElementById('c'+k).classList.remove('lit');
+    document.getElementById('m'+k).classList.remove('on');
+    document.getElementById('m'+k).innerHTML='&#127908; Voice';
   }
-  activeField = null;
-  document.getElementById('voice-banner').classList.remove('on');
-  document.getElementById('banner-txt').textContent = 'Tap mic button next to any field for voice input';
+  af=null;
+  document.getElementById('vBanner').classList.remove('on');
+  document.getElementById('vBannerTxt').textContent='Tap Voice button next to any field';
 }
-function searchLinkedIn() {
-  var n = document.getElementById('f-name').value.trim();
-  var c = document.getElementById('f-company').value.trim();
-  if (!n) { showToast('Enter name first', 'err'); return; }
-  window.open('https://www.google.com/search?q=' + encodeURIComponent('"'+n+'"'+(c?' "'+c+'"':'')+' site:linkedin.com/in'), '_blank');
-  document.getElementById('li-status').textContent = 'Copy the LinkedIn URL from Google and paste above';
+function searchLI(){
+  var n=document.getElementById('fName').value.trim();
+  var c=document.getElementById('fCompany').value.trim();
+  if(!n){ toast('Enter name first',1); return; }
+  window.open('https://www.google.com/search?q='+encodeURIComponent('"'+n+'"'+(c?' "'+c+'"':'')+' site:linkedin.com/in'),'_blank');
+  document.getElementById('liStatus').textContent='Copy the LinkedIn URL from Google and paste above';
 }
-function clearForm() {
-  var fields = ['name','company','phone','email','requirements','linkedin'];
-  for (var i = 0; i < fields.length; i++) document.getElementById('f-' + fields[i]).value = '';
-  document.getElementById('li-status').textContent = '';
-  stopVoice();
+function clearForm(){
+  ['fName','fCompany','fPhone','fEmail','fRequirements','fLinkedin'].forEach(function(id){ document.getElementById(id).value=''; });
+  document.getElementById('liStatus').textContent='';
+  stopMic();
 }
 
-loadDb(); renderEvents();
+ld(); renderEvents();
 </script>
 </body>
 </html>
