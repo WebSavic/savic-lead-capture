@@ -320,18 +320,26 @@ let sr = null, af = null;
 
 // ─── AUTH: implicit flow (no library needed) ──────────────────────────────────
 function initMsal() {
-  // Check if we're returning from MS login redirect with token in hash
   const hash = window.location.hash;
-  if (hash.includes('access_token')) {
-    const params = new URLSearchParams(hash.replace('#','?').slice(1));
+  console.log('Hash on load:', hash); // debug
+  if (hash && hash.includes('access_token')) {
+    const params = new URLSearchParams(hash.substring(1)); // remove leading #
     const token = params.get('access_token');
+    const error = params.get('error');
+    const errDesc = params.get('error_description');
+    if (error) {
+      console.error('MS Auth error:', error, errDesc);
+      toast('❌ Login error: ' + error, 'err');
+      window.location.hash = '';
+      return;
+    }
     if (token) {
+      console.log('Token received ✅');
       sessionStorage.setItem(TOKEN_KEY, token);
-      window.location.hash = ''; // clean URL
+      history.replaceState(null, '', window.location.pathname); // clean URL without reload
       loadMsUser(token);
     }
   } else {
-    // Restore token from session
     const saved = sessionStorage.getItem(TOKEN_KEY);
     if (saved) loadMsUser(saved);
   }
@@ -357,19 +365,17 @@ async function loadMsUser(token) {
 }
 
 function msSignIn() {
-  if (CLIENT_ID === 'YOUR_AZURE_APP_CLIENT_ID') {
-    toast('⚠️ Paste your Azure Client ID in the code first', 'err');
-    showAzureHelp();
-    return;
-  }
-  const redirectUri = encodeURIComponent('https://blue-water-00104b510.2.azurestaticapps.net');
-  const url = `https://login.microsoftonline.com/${TENANT}/oauth2/v2.0/authorize`
-    + `?client_id=${CLIENT_ID}`
-    + `&response_type=token`
-    + `&redirect_uri=${redirectUri}`
-    + `&scope=${encodeURIComponent(SCOPES)}`
-    + `&response_mode=fragment`
-    + `&nonce=${Math.random()}`;
+  const redirectUri = 'https://blue-water-00104b510.2.azurestaticapps.net';
+  const url = 'https://login.microsoftonline.com/' + TENANT + '/oauth2/v2.0/authorize'
+    + '?client_id=' + CLIENT_ID
+    + '&response_type=token'
+    + '&redirect_uri=' + encodeURIComponent(redirectUri)
+    + '&scope=' + encodeURIComponent(SCOPES)
+    + '&response_mode=fragment'
+    + '&prompt=select_account'
+    + '&nonce=' + Date.now();
+
+  console.log('MS Login URL:', url); // debug
   window.location.href = url;
 }
 
