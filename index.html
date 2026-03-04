@@ -16,49 +16,59 @@ body{font-family:'Segoe UI',sans-serif;background:#f0f4f8;min-height:100vh}
 .pane{display:none;padding:16px;max-width:480px;margin:0 auto}
 .pane.active{display:block}
 .card{background:#fff;border-radius:12px;padding:16px;box-shadow:0 2px 8px rgba(0,0,0,.08);margin-bottom:12px}
-.status-bar{padding:10px 16px;font-size:13px;font-weight:600;text-align:center;display:none}
-.status-bar.show{display:block}
+.sbar{padding:10px 16px;font-size:13px;font-weight:600;text-align:center;display:none}
+.sbar.show{display:block}
 label{display:block;font-size:11px;font-weight:600;color:#374151;margin-bottom:4px;text-transform:uppercase;letter-spacing:.4px}
-input,textarea{width:100%;border:1.5px solid #d1d5db;border-radius:8px;padding:10px 12px;font-size:14px;color:#1f2937;outline:none;margin-bottom:12px;transition:.2s}
-input:focus,textarea:focus{border-color:#1a56c4;box-shadow:0 0 0 3px rgba(26,86,196,.1)}
+input,textarea,select{width:100%;border:1.5px solid #d1d5db;border-radius:8px;padding:10px 12px;font-size:14px;color:#1f2937;outline:none;margin-bottom:12px;background:#fff}
+input:focus,textarea:focus,select:focus{border-color:#1a56c4;box-shadow:0 0 0 3px rgba(26,86,196,.1)}
 input.filled{border-color:#10b981;background:#f0fdf4}
 textarea.filled{border-color:#10b981;background:#f0fdf4}
 textarea{resize:vertical;min-height:70px;margin-bottom:0}
-.btn{width:100%;padding:13px;border:none;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;margin-bottom:8px}
+.btn{width:100%;padding:13px;border:none;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;margin-bottom:8px;display:flex;align-items:center;justify-content:center;gap:8px}
 .btn-blue{background:linear-gradient(135deg,#1a56c4,#0a2d6b);color:#fff}
 .btn-green{background:linear-gradient(135deg,#059669,#047857);color:#fff}
 .btn-gray{background:#f1f5f9;color:#374151;border:1.5px solid #d1d5db}
 .btn-red{background:#fee2e2;color:#ef4444;border:1.5px solid #fca5a5}
-.scan-box{background:linear-gradient(135deg,#0a2d6b,#1a56c4);border-radius:14px;padding:18px;margin-bottom:12px;text-align:center;color:#fff}
-.scan-box h2{font-size:15px;font-weight:700;margin-bottom:4px}
-.scan-box p{font-size:12px;opacity:.8;margin-bottom:14px}
-.scan-label{background:#fff;color:#1a56c4;border-radius:10px;padding:13px;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.scan-box{background:linear-gradient(135deg,#0a2d6b,#1a56c4);border-radius:14px;padding:16px;margin-bottom:12px;text-align:center;color:#fff}
+.scan-box h2{font-size:14px;font-weight:700;margin-bottom:3px}
+.scan-box p{font-size:11px;opacity:.8;margin-bottom:12px}
+.scan-label{background:#fff;color:#1a56c4;border-radius:10px;padding:11px;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px}
 #cardPreview{width:100%;border-radius:8px;margin-top:10px;border:2px solid rgba(255,255,255,.3);display:none}
-.voice-box{background:#fff;border-radius:12px;padding:14px;box-shadow:0 2px 8px rgba(0,0,0,.08);margin-bottom:12px;text-align:center}
-.mic-btn{width:66px;height:66px;border-radius:50%;border:none;font-size:28px;cursor:pointer;background:linear-gradient(135deg,#1a56c4,#0a2d6b);color:#fff;box-shadow:0 4px 14px rgba(26,86,196,.3);margin:0 auto;display:block}
+.voice-box{background:#fff;border-radius:12px;padding:12px;box-shadow:0 2px 8px rgba(0,0,0,.08);margin-bottom:12px;text-align:center}
+.mic-btn{width:60px;height:60px;border-radius:50%;border:none;font-size:26px;cursor:pointer;background:linear-gradient(135deg,#1a56c4,#0a2d6b);color:#fff;margin:0 auto;display:block}
 .mic-btn.on{background:linear-gradient(135deg,#ef4444,#b91c1c);box-shadow:0 0 0 8px rgba(239,68,68,.15)}
-#interimTxt{font-size:12px;color:#6b7280;font-style:italic;min-height:18px;margin-top:6px}
-.user-bar{background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:8px 12px;font-size:13px;color:#166534;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center}
-.name-gate{text-align:center;padding:8px 0}
-.counter{text-align:center;padding:16px}
-.counter .num{font-size:36px;font-weight:700;color:#1a56c4;display:block}
-.lead-item{background:#fff;border-radius:10px;padding:12px 14px;margin-bottom:10px;box-shadow:0 1px 4px rgba(0,0,0,.06);border-left:4px solid #1a56c4}
+#interimTxt{font-size:11px;color:#6b7280;font-style:italic;min-height:16px;margin-top:6px}
+.user-bar{background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:8px 12px;font-size:12px;color:#166534;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center}
+.event-bar{background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:8px 12px;font-size:12px;color:#1e40af;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center}
+.counter{text-align:center;padding:14px}
+.counter .num{font-size:32px;font-weight:700;color:#1a56c4;display:block}
+.lead-item{background:#fff;border-radius:10px;padding:11px 13px;margin-bottom:10px;box-shadow:0 1px 4px rgba(0,0,0,.06);border-left:4px solid #1a56c4}
 .lead-name{font-weight:700;font-size:14px;color:#1f2937}
 .lead-co{font-size:12px;color:#4b5563;margin-top:2px}
 .lead-ph{font-size:12px;color:#6b7280;margin-top:3px}
-.lead-req{font-size:12px;color:#374151;margin-top:5px;background:#f8fafc;padding:5px 8px;border-radius:6px}
+.lead-req{font-size:12px;color:#374151;margin-top:4px;background:#f8fafc;padding:5px 8px;border-radius:6px}
 .lead-meta{font-size:11px;color:#9ca3af;margin-top:3px}
 .badge{display:inline-block;background:#dcfce7;color:#166534;font-size:10px;padding:1px 7px;border-radius:10px;font-weight:600;margin-left:4px}
-.empty{text-align:center;padding:40px 20px;color:#9ca3af}
-.admin-note{font-size:11px;color:#9ca3af;margin-top:4px}
-.config-saved{background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:10px 12px;font-size:13px;color:#166534;margin-top:12px}
+.empty{text-align:center;padding:32px 20px;color:#9ca3af}
+.anote{font-size:11px;color:#9ca3af;margin-top:-8px;margin-bottom:10px}
+.cfg-saved{background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:10px 12px;font-size:12px;color:#166534;margin-top:10px;line-height:1.8}
+.info-box{background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:10px 12px;font-size:12px;color:#1e40af;margin-bottom:12px;line-height:1.7}
+.warn-box{background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:10px 12px;font-size:12px;color:#92400e;margin-bottom:10px;line-height:1.7}
+.event-card{background:#fff;border-radius:10px;padding:12px 14px;margin-bottom:8px;box-shadow:0 1px 4px rgba(0,0,0,.06);border-left:4px solid #1a56c4;display:flex;justify-content:space-between;align-items:center;cursor:pointer}
+.event-card:hover{background:#eff6ff}
+.event-card.selected{border-left-color:#059669;background:#f0fdf4}
+.event-name{font-weight:700;font-size:13px;color:#1f2937}
+.event-date{font-size:11px;color:#6b7280;margin-top:2px}
+.event-path{font-size:10px;color:#9ca3af;margin-top:2px}
+.section-title{font-size:12px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px}
 </style>
 </head>
 <body>
 
 <div class="header">
   <h1>🎯 SAVIC Lead Capture</h1>
-  <p id="headerSub">SAP Workshop — Shared OneDrive Excel</p>
+  <p id="headerSub">SAP Workshop — Multi Event</p>
 </div>
 
 <div class="tabs">
@@ -67,466 +77,500 @@ textarea{resize:vertical;min-height:70px;margin-bottom:0}
   <div class="tab" onclick="showTab('admin')">⚙️ Admin</div>
 </div>
 
-<div id="statusBar" class="status-bar"></div>
+<div id="sbar" class="sbar"></div>
 
-<!-- CAPTURE TAB -->
+<!-- ══════════ CAPTURE TAB ══════════ -->
 <div id="paneCapture" class="pane active">
 
-  <!-- Name gate -->
-  <div id="nameGate" class="card name-gate">
-    <div style="font-size:28px;margin-bottom:8px">👋</div>
-    <div style="font-size:16px;font-weight:700;margin-bottom:4px">Welcome</div>
-    <div style="font-size:13px;color:#6b7280;margin-bottom:14px">Enter your name before capturing leads</div>
-    <input type="text" id="inputUserName" placeholder="Your name e.g. Meghan" style="margin-bottom:12px" onkeydown="if(event.key==='Enter')setUserName()"/>
-    <button class="btn btn-blue" onclick="setUserName()">Start Capturing →</button>
+  <!-- Step 1: Sign in -->
+  <div id="stepSignIn" class="card" style="text-align:center;padding:24px">
+    <div style="font-size:36px;margin-bottom:8px">🪟</div>
+    <div style="font-size:15px;font-weight:700;margin-bottom:4px">Sign in with Microsoft</div>
+    <div style="font-size:12px;color:#6b7280;margin-bottom:16px">Required to save leads to OneDrive</div>
+    <button class="btn btn-blue" onclick="signIn()"><span style="font-size:16px">🪟</span> Sign in with Microsoft</button>
+    <div style="font-size:11px;color:#9ca3af;margin-top:8px">Uses your SAVIC Microsoft account</div>
   </div>
 
-  <!-- Capture form (hidden until name set) -->
-  <div id="captureForm" style="display:none">
+  <!-- Step 2: Enter name -->
+  <div id="stepName" style="display:none" class="card" style="text-align:center;padding:24px">
+    <div style="font-size:28px;margin-bottom:8px;text-align:center">👋</div>
+    <div style="font-size:15px;font-weight:700;margin-bottom:4px;text-align:center">Your Name</div>
+    <div style="font-size:12px;color:#6b7280;margin-bottom:14px;text-align:center">This will tag your leads in the shared Excel</div>
+    <input type="text" id="inputUserName" placeholder="e.g. Meghan" onkeydown="if(event.key==='Enter')setName()"/>
+    <button class="btn btn-blue" onclick="setName()">Next →</button>
+  </div>
+
+  <!-- Step 3: Select event -->
+  <div id="stepEvent" style="display:none">
     <div class="user-bar">
-      <span>👤 Capturing as: <strong id="displayName"></strong></span>
-      <span style="cursor:pointer;font-size:11px;color:#6b7280" onclick="resetName()">Change</span>
+      <span>👤 <strong id="dispName"></strong></span>
+      <span style="cursor:pointer;font-size:11px;color:#6b7280" onclick="goStep('name')">Change</span>
+    </div>
+    <div class="card">
+      <div class="section-title">Select Event</div>
+      <div id="eventPickerList"></div>
+      <div id="noEventsMsg" style="display:none;color:#9ca3af;font-size:13px;text-align:center;padding:12px">
+        No events yet — ask Admin to create one in ⚙️ Admin tab
+      </div>
+    </div>
+  </div>
+
+  <!-- Step 4: Capture form -->
+  <div id="stepCapture" style="display:none">
+    <div class="user-bar">
+      <span>👤 <strong id="dispName2"></strong></span>
+      <span style="cursor:pointer;font-size:11px;color:#6b7280" onclick="goStep('name')">Change</span>
+    </div>
+    <div class="event-bar">
+      <span>📅 <strong id="dispEvent"></strong></span>
+      <span style="cursor:pointer;font-size:11px;color:#1e40af" onclick="goStep('event')">Change</span>
     </div>
 
-    <!-- Business card scan -->
     <div class="scan-box">
       <h2>📸 Scan Business Card</h2>
-      <p>Point camera at card — AI fills all fields instantly</p>
+      <p>AI fills all fields instantly from card photo</p>
       <label class="scan-label">
-        <span style="font-size:20px">📷</span> Take Photo / Choose Image
+        <span style="font-size:18px">📷</span> Take Photo / Choose Image
         <input type="file" accept="image/*" capture="environment" onchange="handleScan(event)" style="display:none"/>
       </label>
-      <img id="cardPreview" alt="card preview"/>
+      <img id="cardPreview" alt=""/>
     </div>
 
-    <!-- Voice -->
     <div class="voice-box">
-      <div style="font-size:12px;color:#6b7280;margin-bottom:10px">🎙 Or speak — name, company, phone, requirements</div>
+      <div style="font-size:12px;color:#6b7280;margin-bottom:8px">🎙 Speak name, company, phone, requirements</div>
       <button class="mic-btn" id="micBtn" onclick="toggleVoice()">🎙</button>
       <div id="interimTxt"></div>
     </div>
 
-    <!-- Manual fields -->
     <div class="card">
-      <div style="font-size:11px;font-weight:700;color:#9ca3af;margin-bottom:12px;text-transform:uppercase;letter-spacing:.5px">Fill / Edit Fields</div>
-      <label>Full Name *</label>
-      <input type="text" id="fName" placeholder="e.g. Rajesh Kumar"/>
-      <label>Company *</label>
-      <input type="text" id="fCompany" placeholder="e.g. Tata Consultancy Services"/>
-      <label>Phone *</label>
-      <input type="tel" id="fPhone" placeholder="e.g. 9876543210"/>
-      <label>Email</label>
-      <input type="email" id="fEmail" placeholder="e.g. rajesh@company.com"/>
-      <label>Designation</label>
-      <input type="text" id="fDesig" placeholder="e.g. SAP Manager"/>
+      <div class="section-title">Fill / Edit Fields</div>
+      <label>Full Name *</label><input type="text" id="fName" placeholder="e.g. Rajesh Kumar"/>
+      <label>Company *</label><input type="text" id="fCompany" placeholder="e.g. Tata Consultancy"/>
+      <label>Phone *</label><input type="tel" id="fPhone" placeholder="e.g. 9876543210"/>
+      <label>Email</label><input type="email" id="fEmail" placeholder="e.g. rajesh@company.com"/>
+      <label>Designation</label><input type="text" id="fDesig" placeholder="e.g. SAP Manager"/>
       <label>Requirements / Notes</label>
-      <textarea id="fReq" placeholder="SAP module needed, team size, timeline..."></textarea>
+      <textarea id="fReq" placeholder="SAP module, team size, timeline..."></textarea>
     </div>
 
-    <button class="btn btn-blue" onclick="saveLead()">💾 Save Lead to OneDrive</button>
+    <button class="btn btn-blue" id="saveBtn" onclick="saveLead()"><span>💾</span> Save Lead to OneDrive</button>
     <button class="btn btn-gray" onclick="clearForm()">🗑 Clear Form</button>
   </div>
 </div>
 
-<!-- LEADS TAB -->
+<!-- ══════════ LEADS TAB ══════════ -->
 <div id="paneLeads" class="pane">
+  <div class="card" style="margin-bottom:10px">
+    <label>Select Event to View</label>
+    <select id="leadsEventSelect" onchange="loadLeads()">
+      <option value="">-- Select Event --</option>
+    </select>
+  </div>
   <div class="card counter">
     <span class="num" id="leadsCount">0</span>
-    Total Leads on OneDrive
+    Leads for this Event
   </div>
-  <button class="btn btn-blue" onclick="loadLeads()">🔄 Refresh from OneDrive</button>
-  <button class="btn btn-green" onclick="exportCSV()">📥 Export to CSV</button>
-  <div id="leadsList"><div class="empty"><p>Tap Refresh to load leads from OneDrive</p></div></div>
+  <button class="btn btn-blue" onclick="loadLeads()"><span>🔄</span> Refresh</button>
+  <button class="btn btn-green" onclick="exportCSV()"><span>📥</span> Export CSV</button>
+  <div id="leadsList"><div class="empty"><p>Select an event and tap Refresh</p></div></div>
 </div>
 
-<!-- ADMIN TAB -->
+<!-- ══════════ ADMIN TAB ══════════ -->
 <div id="paneAdmin" class="pane">
   <div class="card">
     <div id="adminLock">
       <div style="text-align:center;margin-bottom:14px">
-        <div style="font-size:32px;margin-bottom:6px">🔐</div>
-        <div style="font-size:16px;font-weight:700">Admin Access</div>
-        <div style="font-size:13px;color:#6b7280;margin-top:4px">Enter password to configure OneDrive</div>
+        <div style="font-size:30px;margin-bottom:6px">🔐</div>
+        <div style="font-size:15px;font-weight:700">Admin Access</div>
+        <div style="font-size:12px;color:#6b7280;margin-top:3px">Enter password to manage events</div>
       </div>
-      <label>Admin Password</label>
+      <label>Password</label>
       <div style="position:relative;margin-bottom:12px">
         <input type="password" id="adminPwd" placeholder="Enter password" onkeydown="if(event.key==='Enter')unlockAdmin()" style="margin-bottom:0;padding-right:44px"/>
-        <button onclick="togglePwdView()" id="eyeBtn" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:18px;color:#6b7280">👁</button>
+        <button onclick="togglePwd()" id="eyeBtn" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:18px;color:#6b7280">👁</button>
       </div>
       <button class="btn btn-blue" onclick="unlockAdmin()">Unlock</button>
-      <div class="admin-note" style="text-align:center">Default: savic@admin</div>
+      <div style="text-align:center;font-size:11px;color:#9ca3af;margin-top:4px">Default: savic@admin</div>
     </div>
-    <div id="adminPanel" style="display:none">
-      <div style="font-size:15px;font-weight:700;margin-bottom:4px">⚙️ OneDrive Configuration</div>
-      <div style="font-size:13px;color:#6b7280;margin-bottom:16px">Set the shared Excel location once — all users write to this file</div>
-      <label>OneDrive Folder</label>
-      <input type="hidden" id="adminFolder"/>
-      <div id="selectedFolderDisplay" style="display:none;background:#eff6ff;border:1.5px solid #bfdbfe;border-radius:8px;padding:10px 12px;font-size:13px;color:#1e40af;font-weight:600;margin-bottom:8px"></div>
-      <button class="btn btn-gray" onclick="loadOneDriveFolders()" style="margin-bottom:12px">📂 Browse & Select Folder from OneDrive</button>
 
-      <!-- Folder picker dropdown -->
-      <div id="folderPicker" style="display:none;border:1.5px solid #bfdbfe;border-radius:10px;overflow:hidden;margin-bottom:12px">
-        <div style="background:#eff6ff;padding:8px 12px;font-size:12px;font-weight:600;color:#1e40af">Select a folder from your OneDrive:</div>
-        <div id="folderList" style="max-height:200px;overflow-y:auto;background:#fff"></div>
-        <div style="padding:8px 12px;background:#f8fafc">
-          <div style="font-size:11px;color:#6b7280;margin-bottom:6px">Or type a custom path:</div>
-          <input type="text" placeholder="e.g. SAVIC/Workshops/2026" oninput="document.getElementById('adminFolder').value=this.value;document.getElementById('selectedFolderDisplay').textContent='📁 '+this.value;document.getElementById('selectedFolderDisplay').style.display='block'" style="margin-bottom:6px"/>
+    <div id="adminPanel" style="display:none">
+
+      <!-- Base OneDrive path (set once) -->
+      <div style="margin-bottom:16px">
+        <div class="section-title">Base OneDrive Folder</div>
+        <div class="info-box" style="margin-bottom:8px">
+          📁 This is the <strong>root folder</strong> in OneDrive where all event subfolders will be created.<br/>
+          Example: <strong>SAVIC/Workshops</strong>
         </div>
+        <label>Base OneDrive Path</label>
+        <input type="text" id="basePath" placeholder="e.g. SAVIC/Workshops"/>
+        <button class="btn btn-gray" style="margin-bottom:0" onclick="saveBasePath()">💾 Save Base Path</button>
+        <div id="basePathStatus"></div>
       </div>
 
-      <label>Excel File Name</label>
-      <input type="text" id="adminFile" placeholder="e.g. SAVICLeads.xlsx"/>
-      <div class="admin-note" style="margin-top:-10px;margin-bottom:14px">All team leads go into this single file</div>
-      <button class="btn btn-blue" onclick="saveAdminConfig()">✅ Save & Create Excel on OneDrive</button>
-      <div id="configStatus"></div>
+      <hr style="border:none;border-top:1px solid #e5e7eb;margin:16px 0"/>
+
+      <!-- Create new event -->
+      <div>
+        <div class="section-title">Create New Event</div>
+        <label>Event Name</label>
+        <input type="text" id="newEventName" placeholder="e.g. SAP Mumbai Workshop March 2026"/>
+        <label>Excel File Name</label>
+        <input type="text" id="newEventFile" placeholder="e.g. Mumbai_Leads.xlsx"/>
+        <div class="warn-box">
+          ⚠️ After creating, manually create the Excel in OneDrive with headers in Row 1:<br/>
+          <strong>S.No | Captured By | Name | Company | Designation | Phone | Email | Requirements | Captured At</strong>
+        </div>
+        <button class="btn btn-blue" onclick="createEvent()"><span>➕</span> Create Event</button>
+      </div>
+
+      <hr style="border:none;border-top:1px solid #e5e7eb;margin:16px 0"/>
+
+      <!-- Existing events -->
+      <div>
+        <div class="section-title">All Events</div>
+        <div id="adminEventList"><div style="color:#9ca3af;font-size:13px">No events yet</div></div>
+      </div>
     </div>
   </div>
 </div>
 
 <script>
-const CFG_KEY = 'savic_cfg_v2';
-let cfg = {};
-try { cfg = JSON.parse(localStorage.getItem(CFG_KEY)) || {}; } catch {}
-let userName = '';
-let leads = [];
+// ─── STATE ────────────────────────────────────────────────────────────────────
+const EVENTS_KEY = 'savic_events_v1';
+const TOKEN_KEY  = 'savic_ms_token';
+let events = [];
+try { events = JSON.parse(localStorage.getItem(EVENTS_KEY)) || []; } catch {}
+let basePath = localStorage.getItem('savic_base_path') || '';
+let msToken = sessionStorage.getItem(TOKEN_KEY) || '';
+let userName = '', selectedEvent = null, leads = [];
 let srObj = null, voiceOn = false, fullTx = '';
 
-// ── tabs ──────────────────────────────────────────────────────────────────────
-function showTab(t) {
-  document.querySelectorAll('.tab').forEach((el,i)=>{
-    el.classList.toggle('active', ['capture','leads','admin'][i]===t);
-  });
-  ['capture','leads','admin'].forEach(id=>{
-    document.getElementById('pane'+id.charAt(0).toUpperCase()+id.slice(1)).classList.toggle('active', id===t);
-  });
-  if(t==='leads') loadLeads();
-  if(t==='admin') initAdmin();
+// ─── MICROSOFT AUTH ───────────────────────────────────────────────────────────
+function signIn() {
+  const redirect = window.location.href.split('?')[0].split('#')[0];
+  const url = 'https://login.microsoftonline.com/common/oauth2/v2.0/authorize'
+    + '?client_id=14d82eec-204b-4c2f-b7e8-296a70dab67e'
+    + '&response_type=token'
+    + '&redirect_uri=' + encodeURIComponent(redirect)
+    + '&scope=' + encodeURIComponent('Files.ReadWrite User.Read')
+    + '&response_mode=fragment';
+  window.location.href = url;
+}
+function parseToken() {
+  const hash = window.location.hash.substring(1);
+  if (!hash) return;
+  const p = new URLSearchParams(hash);
+  const t = p.get('access_token');
+  if (t) { msToken = t; sessionStorage.setItem(TOKEN_KEY, t); window.history.replaceState(null,'',window.location.pathname); }
 }
 
-// ── status ────────────────────────────────────────────────────────────────────
-function toast(msg, type) {
-  const el = document.getElementById('statusBar');
-  const colors = {info:['#eff6ff','#1e40af'], success:['#f0fdf4','#166534'], error:['#fef2f2','#991b1b'], loading:['#fffbeb','#92400e']};
-  const [bg, color] = colors[type] || colors.info;
-  el.style.background = bg; el.style.color = color;
-  el.textContent = (type==='loading'?'⏳ ':'')+msg;
-  el.classList.add('show');
-  if(type!=='loading') setTimeout(()=>el.classList.remove('show'), 3500);
+// ─── GRAPH API ────────────────────────────────────────────────────────────────
+async function graphPatch(path, body) {
+  const r = await fetch('https://graph.microsoft.com/v1.0' + path, {
+    method: 'PATCH',
+    headers: { Authorization: 'Bearer ' + msToken, 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  });
+  if (r.status === 401) { msToken = ''; sessionStorage.removeItem(TOKEN_KEY); throw new Error('auth'); }
+  return r;
+}
+async function graphGet(path) {
+  const r = await fetch('https://graph.microsoft.com/v1.0' + path, {
+    headers: { Authorization: 'Bearer ' + msToken }
+  });
+  if (r.status === 401) { msToken = ''; sessionStorage.removeItem(TOKEN_KEY); throw new Error('auth'); }
+  return r.json();
+}
+function excelPath(ev) {
+  const base = (basePath || '').replace(/^\/|\/$/g, '');
+  const folder = ev.folder.replace(/^\/|\/$/g, '');
+  return base ? base + '/' + folder + '/' + ev.file : folder + '/' + ev.file;
+}
+async function getLastRow(fullPath) {
+  const data = await graphGet('/me/drive/root:/' + fullPath + ':/workbook/worksheets(\'Sheet1\')/usedRange');
+  if (data.error) return 1;
+  return data.rowCount || 1;
+}
+async function appendRow(ev, row) {
+  const path = excelPath(ev);
+  const lastRow = await getLastRow(path);
+  const next = lastRow + 1;
+  const range = 'A' + next + ':I' + next;
+  const r = await graphPatch('/me/drive/root:/' + path + ':/workbook/worksheets(\'Sheet1\')/range(address=\'' + range + '\')', {
+    values: [[lastRow, row.capturedBy, row.name, row.company, row.designation, row.phone, row.email, row.requirements, row.capturedAt]]
+  });
+  return r.ok;
+}
+async function readRows(ev) {
+  const data = await graphGet('/me/drive/root:/' + excelPath(ev) + ':/workbook/worksheets(\'Sheet1\')/usedRange');
+  if (data.error || !data.values || data.values.length < 2) return [];
+  return data.values.slice(1).map(r => ({
+    sno:r[0], capturedBy:r[1], name:r[2], company:r[3],
+    designation:r[4], phone:r[5], email:r[6], requirements:r[7], capturedAt:r[8]
+  }));
 }
 
-// ── name gate ─────────────────────────────────────────────────────────────────
-function setUserName() {
+// ─── STEPS ────────────────────────────────────────────────────────────────────
+function goStep(step) {
+  document.getElementById('stepSignIn').style.display  = step==='signin' ? 'block':'none';
+  document.getElementById('stepName').style.display    = step==='name'   ? 'block':'none';
+  document.getElementById('stepEvent').style.display   = step==='event'  ? 'block':'none';
+  document.getElementById('stepCapture').style.display = step==='capture'? 'block':'none';
+}
+function setName() {
   const v = document.getElementById('inputUserName').value.trim();
-  if(!v) { toast('Enter your name','error'); return; }
+  if (!v) { toast('Enter your name','error'); return; }
   userName = v;
-  document.getElementById('displayName').textContent = v;
-  document.getElementById('nameGate').style.display = 'none';
-  document.getElementById('captureForm').style.display = 'block';
+  document.getElementById('dispName').textContent = v;
+  document.getElementById('dispName2').textContent = v;
+  renderEventPicker();
+  goStep('event');
 }
-function resetName() {
-  userName = '';
-  document.getElementById('nameGate').style.display = 'block';
-  document.getElementById('captureForm').style.display = 'none';
-  clearForm();
+function selectEvent(idx) {
+  selectedEvent = events[idx];
+  document.getElementById('dispEvent').textContent = selectedEvent.name;
+  goStep('capture');
+  updateBadge();
 }
 
-// ── business card scan ────────────────────────────────────────────────────────
+function renderEventPicker() {
+  const el = document.getElementById('eventPickerList');
+  const msg = document.getElementById('noEventsMsg');
+  const active = events.filter(e => e.active !== false);
+  if (!active.length) { el.innerHTML=''; msg.style.display='block'; return; }
+  msg.style.display = 'none';
+  el.innerHTML = active.map((ev, i) => `
+    <div class="event-card${selectedEvent&&selectedEvent.id===ev.id?' selected':''}" onclick="selectEvent(${events.indexOf(ev)})">
+      <div>
+        <div class="event-name">📅 ${ev.name}</div>
+        <div class="event-path">📁 ${ev.folder}/${ev.file}</div>
+        <div class="event-date">Created: ${ev.created}</div>
+      </div>
+      <span style="font-size:20px;color:#1a56c4">›</span>
+    </div>`).join('');
+}
+
+// ─── TABS ─────────────────────────────────────────────────────────────────────
+function showTab(t) {
+  document.querySelectorAll('.tab').forEach((el,i) => el.classList.toggle('active', ['capture','leads','admin'][i]===t));
+  ['capture','leads','admin'].forEach(id => document.getElementById('pane'+id.charAt(0).toUpperCase()+id.slice(1)).classList.toggle('active', id===t));
+  if (t==='leads') populateLeadsDropdown();
+  if (t==='admin') renderAdminEvents();
+}
+
+// ─── STATUS ───────────────────────────────────────────────────────────────────
+function toast(msg, type) {
+  const el=document.getElementById('sbar');
+  const c={info:['#eff6ff','#1e40af'],success:['#f0fdf4','#166534'],error:['#fef2f2','#991b1b'],loading:['#fffbeb','#92400e']};
+  const [bg,color]=c[type]||c.info;
+  el.style.background=bg; el.style.color=color;
+  el.textContent=(type==='loading'?'⏳ ':'')+msg;
+  el.classList.add('show');
+  if(type!=='loading') setTimeout(()=>el.classList.remove('show'),3500);
+}
+
+// ─── SCAN ─────────────────────────────────────────────────────────────────────
 async function handleScan(e) {
-  const file = e.target.files[0]; if(!file) return;
-  const b64url = await toB64(file);
-  const img = document.getElementById('cardPreview');
-  img.src = b64url; img.style.display = 'block';
-  toast('AI is reading the card...','loading');
+  const file=e.target.files[0]; if(!file) return;
+  const b64url=await toB64(file);
+  const img=document.getElementById('cardPreview'); img.src=b64url; img.style.display='block';
+  toast('AI reading card...','loading');
   try {
-    const data = await callClaude([{role:'user',content:[
+    const data=await callClaude([{role:'user',content:[
       {type:'image',source:{type:'base64',media_type:file.type||'image/jpeg',data:b64url.split(',')[1]}},
-      {type:'text',text:'Read this business card. Return ONLY a raw JSON object with keys: name,company,phone,email,designation. Empty string for missing. No markdown, no explanation.'}
-    ]}], 'You are a business card reader. Return only raw JSON object.', 400);
-    const txt = extractTxt(data).replace(/```json|```/g,'').trim();
-    const p = JSON.parse(txt);
-    setField('fName', p.name); setField('fCompany', p.company);
-    setField('fPhone', p.phone); setField('fEmail', p.email); setField('fDesig', p.designation);
+      {type:'text',text:'Read this business card. Return ONLY raw JSON with keys: name,company,phone,email,designation. Empty string for missing. No markdown.'}
+    ]}],'You are a business card reader. Return only raw JSON.',400);
+    const p=JSON.parse(extractTxt(data).replace(/```json|```/g,'').trim());
+    setF('fName',p.name);setF('fCompany',p.company);setF('fPhone',p.phone);setF('fEmail',p.email);setF('fDesig',p.designation);
     toast('✅ Card scanned! Add requirements and save.','success');
     setTimeout(()=>document.getElementById('fReq').focus(),300);
   } catch { toast('Could not read card — fill manually','error'); }
   e.target.value='';
 }
 
-// ── voice ─────────────────────────────────────────────────────────────────────
-function toggleVoice() {
-  if(voiceOn) { stopVoice(true); return; }
-  const SR = window.SpeechRecognition||window.webkitSpeechRecognition;
-  if(!SR) { toast('Voice not supported — use Chrome on Android','error'); return; }
-  srObj = new SR(); srObj.lang='en-IN'; srObj.continuous=true; srObj.interimResults=true;
-  fullTx='';
-  srObj.onresult=e=>{
-    let interim='';
-    for(let i=e.resultIndex;i<e.results.length;i++){
-      if(e.results[i].isFinal) fullTx+=e.results[i][0].transcript+' ';
-      else interim=e.results[i][0].transcript;
-    }
-    document.getElementById('interimTxt').textContent=(fullTx+interim).slice(-80);
-  };
-  srObj.onerror=()=>{ toast('Mic error — allow microphone access','error'); stopVoice(false); };
-  srObj.onend=()=>{ if(voiceOn) stopVoice(true); };
-  srObj.start();
-  voiceOn=true;
-  document.getElementById('micBtn').classList.add('on');
-  document.getElementById('micBtn').textContent='⏹';
+// ─── VOICE ────────────────────────────────────────────────────────────────────
+function toggleVoice(){
+  if(voiceOn){stopVoice(true);return;}
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SR){toast('Voice not supported — use Chrome on Android','error');return;}
+  srObj=new SR();srObj.lang='en-IN';srObj.continuous=true;srObj.interimResults=true;fullTx='';
+  srObj.onresult=e=>{let it='';for(let i=e.resultIndex;i<e.results.length;i++){if(e.results[i].isFinal)fullTx+=e.results[i][0].transcript+' ';else it=e.results[i][0].transcript;}document.getElementById('interimTxt').textContent=(fullTx+it).slice(-80);};
+  srObj.onerror=()=>{toast('Mic error','error');stopVoice(false);};
+  srObj.onend=()=>{if(voiceOn)stopVoice(true);};
+  srObj.start();voiceOn=true;
+  document.getElementById('micBtn').classList.add('on');document.getElementById('micBtn').textContent='⏹';
   toast('🎙 Listening... tap ⏹ to stop','info');
 }
-
-async function stopVoice(process) {
-  voiceOn=false;
-  document.getElementById('micBtn').classList.remove('on');
-  document.getElementById('micBtn').textContent='🎙';
+async function stopVoice(process){
+  voiceOn=false;document.getElementById('micBtn').classList.remove('on');document.getElementById('micBtn').textContent='🎙';
   try{srObj&&srObj.stop();}catch{}
-  if(!process||!fullTx.trim()) return;
-  toast('Filling fields with AI...','loading');
+  if(!process||!fullTx.trim())return;
+  toast('Filling fields...','loading');
   try {
-    const data = await callClaude([{role:'user',content:fullTx}],
-      'Extract lead info from spoken text. Return ONLY raw JSON with keys: name,company,phone,email,designation,requirements. Empty string for missing. No markdown.',400);
-    const txt = extractTxt(data).replace(/```json|```/g,'').trim();
-    const p = JSON.parse(txt);
-    setField('fName',p.name); setField('fCompany',p.company);
-    setField('fPhone',p.phone); setField('fEmail',p.email);
-    setField('fDesig',p.designation); setField('fReq',p.requirements);
-    document.getElementById('interimTxt').textContent='';
-    fullTx='';
-    toast('✅ Fields filled! Review and save.','success');
+    const data=await callClaude([{role:'user',content:fullTx}],'Extract lead info. Return ONLY raw JSON: name,company,phone,email,designation,requirements. No markdown.',400);
+    const p=JSON.parse(extractTxt(data).replace(/```json|```/g,'').trim());
+    setF('fName',p.name);setF('fCompany',p.company);setF('fPhone',p.phone);setF('fEmail',p.email);setF('fDesig',p.designation);setF('fReq',p.requirements);
+    document.getElementById('interimTxt').textContent='';fullTx='';
+    toast('✅ Fields filled!','success');
   } catch {
-    document.getElementById('fReq').value=fullTx;
-    document.getElementById('fReq').classList.add('filled');
-    document.getElementById('interimTxt').textContent='';
-    fullTx='';
-    toast('Saved speech to Notes — fill other fields manually','info');
+    document.getElementById('fReq').value=fullTx;document.getElementById('fReq').classList.add('filled');
+    document.getElementById('interimTxt').textContent='';fullTx='';
+    toast('Speech saved to Notes','info');
   }
 }
 
-// ── save lead to onedrive ─────────────────────────────────────────────────────
-async function saveLead() {
-  if(!userName) { toast('Set your name first','error'); return; }
-  if(!document.getElementById('fName').value.trim()) { toast('Name is required','error'); return; }
-  if(!document.getElementById('fCompany').value.trim()) { toast('Company is required','error'); return; }
-  if(!document.getElementById('fPhone').value.trim()) { toast('Phone is required','error'); return; }
-  if(!cfg.folder||!cfg.file) { toast('Admin has not configured OneDrive yet — go to ⚙️ Admin tab','error'); return; }
-
-  const now = new Date().toLocaleString('en-IN');
-  const row = {
-    capturedBy: userName,
-    name: document.getElementById('fName').value.trim(),
-    company: document.getElementById('fCompany').value.trim(),
-    phone: document.getElementById('fPhone').value.trim(),
-    email: document.getElementById('fEmail').value.trim(),
-    designation: document.getElementById('fDesig').value.trim(),
-    requirements: document.getElementById('fReq').value.trim(),
-    capturedAt: now
-  };
-
+// ─── SAVE LEAD ────────────────────────────────────────────────────────────────
+async function saveLead(){
+  if(!msToken){toast('Sign in with Microsoft first','error');return;}
+  if(!selectedEvent){toast('Select an event first','error');return;}
+  const name=document.getElementById('fName').value.trim();
+  const company=document.getElementById('fCompany').value.trim();
+  const phone=document.getElementById('fPhone').value.trim();
+  if(!name){toast('Name is required','error');return;}
+  if(!company){toast('Company is required','error');return;}
+  if(!phone){toast('Phone is required','error');return;}
+  const btn=document.getElementById('saveBtn');btn.disabled=true;
   toast('Saving to OneDrive...','loading');
   try {
-    const data = await callClaude([{role:'user',content:
-      `Append a new row to the Excel file named "${cfg.file}" located in the OneDrive folder "${cfg.folder}". The row data is: Captured By: "${row.capturedBy}", Name: "${row.name}", Company: "${row.company}", Designation: "${row.designation}", Phone: "${row.phone}", Email: "${row.email}", Requirements: "${row.requirements}", Captured At: "${row.capturedAt}". Add it after the last existing row without changing the headers. Reply only "DONE" when finished.`
-    }], 'You are a Microsoft 365 assistant. Use OneDrive and Excel tools to manage files.', 300);
-    const txt = extractTxt(data).toLowerCase();
-    if(txt.includes('done')||txt.includes('added')||txt.includes('success')||txt.includes('appended')) {
-      clearForm();
-      updateBadge(parseInt(document.getElementById('badge').textContent||'0')+1);
-      toast('✅ Lead saved to OneDrive!','success');
-    } else {
-      toast('OneDrive error — check config in Admin tab','error');
-    }
-  } catch {
-    toast('Could not reach OneDrive — check internet connection','error');
+    const ok=await appendRow(selectedEvent,{
+      capturedBy:userName,name,company,phone,
+      email:document.getElementById('fEmail').value.trim(),
+      designation:document.getElementById('fDesig').value.trim(),
+      requirements:document.getElementById('fReq').value.trim(),
+      capturedAt:new Date().toLocaleString('en-IN')
+    });
+    if(ok){clearForm();updateBadge();toast('✅ Lead saved to OneDrive!','success');}
+    else toast('Failed to write — check file path in Admin','error');
+  } catch(e){
+    if(e.message==='auth'){toast('Session expired — sign in again','error');}
+    else toast('Error: '+e.message,'error');
   }
+  btn.disabled=false;
 }
 
-// ── load leads ────────────────────────────────────────────────────────────────
-async function loadLeads() {
-  if(!cfg.folder||!cfg.file) { toast('Admin config not set','error'); return; }
-  toast('Loading from OneDrive...','loading');
+// ─── LEADS TAB ────────────────────────────────────────────────────────────────
+function populateLeadsDropdown(){
+  const sel=document.getElementById('leadsEventSelect');
+  sel.innerHTML='<option value="">-- Select Event --</option>';
+  events.forEach((ev,i)=>sel.innerHTML+=`<option value="${i}">${ev.name}</option>`);
+}
+async function loadLeads(){
+  const sel=document.getElementById('leadsEventSelect');
+  if(!sel.value&&sel.value!=='0'){document.getElementById('leadsList').innerHTML='<div class="empty"><p>Select an event first</p></div>';return;}
+  if(!msToken){toast('Sign in with Microsoft first','error');return;}
+  const ev=events[parseInt(sel.value)];
+  toast('Loading...','loading');
   try {
-    const data = await callClaude([{role:'user',content:
-      `Read all data rows from the Excel file "${cfg.file}" in OneDrive folder "${cfg.folder}". Return a JSON array of objects with keys: capturedBy, name, company, designation, phone, email, requirements, capturedAt. Skip the header row. Return only the raw JSON array.`
-    }], 'You are a Microsoft 365 assistant. Read Excel files and return JSON.', 2000);
-    const txt = extractTxt(data).replace(/```json|```/g,'').trim();
-    leads = JSON.parse(txt);
-    if(!Array.isArray(leads)) leads=[];
-    renderLeads();
+    leads=await readRows(ev);
+    document.getElementById('leadsCount').textContent=leads.length;
+    updateBadge(leads.length);
+    if(!leads.length){document.getElementById('leadsList').innerHTML='<div class="empty"><p>No leads for this event yet</p></div>';return;}
+    document.getElementById('leadsList').innerHTML=leads.map(l=>`
+      <div class="lead-item">
+        <div class="lead-name">${l.name||'-'}</div>
+        <div class="lead-co">🏢 ${l.company||'-'}${l.designation?' · '+l.designation:''}</div>
+        <div class="lead-ph">📞 ${l.phone||'-'}${l.email?' · 📧 '+l.email:''}</div>
+        ${l.requirements?`<div class="lead-req">💬 ${l.requirements}</div>`:''}
+        <div class="lead-meta">👤 ${l.capturedBy||'?'} · ⏰ ${l.capturedAt||'-'}</div>
+      </div>`).join('');
     toast('✅ Loaded '+leads.length+' leads','success');
-  } catch {
-    toast('Could not load from OneDrive','error');
+  } catch(e){
+    if(e.message==='auth')toast('Session expired — sign in again','error');
+    else toast('Error: '+e.message,'error');
   }
 }
-
-function renderLeads() {
-  const el = document.getElementById('leadsList');
-  document.getElementById('leadsCount').textContent = leads.length;
-  updateBadge(leads.length);
-  if(!leads.length){ el.innerHTML='<div class="empty"><p>No leads found in OneDrive file</p></div>'; return; }
-  el.innerHTML = leads.map((l,i)=>`
-    <div class="lead-item">
-      <div class="lead-name">${l.name||'-'}</div>
-      <div class="lead-co">🏢 ${l.company||'-'}${l.designation?' · '+l.designation:''}</div>
-      <div class="lead-ph">📞 ${l.phone||'-'}${l.email?' · 📧 '+l.email:''}</div>
-      ${l.requirements?`<div class="lead-req">💬 ${l.requirements}</div>`:''}
-      <div class="lead-meta">👤 ${l.capturedBy||'?'} · ⏰ ${l.capturedAt||'-'}</div>
-    </div>`).join('');
+function exportCSV(){
+  if(!leads.length){toast('Load leads first','error');return;}
+  const h=['S.No','Captured By','Name','Company','Designation','Phone','Email','Requirements','Captured At'];
+  const rows=leads.map((l,i)=>[i+1,l.capturedBy||'',l.name||'',l.company||'',l.designation||'',l.phone||'',l.email||'',l.requirements||'',l.capturedAt||'']);
+  const csv=[h,...rows].map(r=>r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
+  const evName=(events[document.getElementById('leadsEventSelect').value]||{}).name||'Leads';
+  a.download='SAVIC_'+evName.replace(/\s+/g,'_')+'_'+new Date().toISOString().slice(0,10)+'.csv';
+  a.click();toast('✅ Downloaded!','success');
 }
 
-function exportCSV() {
-  if(!leads.length){ toast('Load leads first','error'); return; }
-  const h = ['S.No','Captured By','Name','Company','Designation','Phone','Email','Requirements','Captured At'];
-  const rows = leads.map((l,i)=>[i+1,l.capturedBy||'',l.name||'',l.company||'',l.designation||'',l.phone||'',l.email||'',l.requirements||'',l.capturedAt||'']);
-  const csv = [h,...rows].map(r=>r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
-  a.download = 'SAVIC_Leads_'+new Date().toISOString().slice(0,10)+'.csv';
-  a.click();
-  toast('✅ Downloaded!','success');
-}
-
-// ── admin ─────────────────────────────────────────────────────────────────────
-function initAdmin() {
-  if(cfg.folder) { document.getElementById('adminFolder').value=cfg.folder; }
-  if(cfg.file) { document.getElementById('adminFile').value=cfg.file; }
-}
-function unlockAdmin() {
+// ─── ADMIN ────────────────────────────────────────────────────────────────────
+function togglePwd(){const i=document.getElementById('adminPwd');const b=document.getElementById('eyeBtn');i.type=i.type==='password'?'text':'password';b.textContent=i.type==='password'?'👁':'🙈';}
+function unlockAdmin(){
   if(document.getElementById('adminPwd').value==='savic@admin'){
     document.getElementById('adminLock').style.display='none';
     document.getElementById('adminPanel').style.display='block';
-    initAdmin();
-  } else { toast('Wrong password','error'); }
+    if(basePath) document.getElementById('basePath').value=basePath;
+    renderAdminEvents();
+  } else toast('Wrong password','error');
 }
-function togglePwdView() {
-  const inp = document.getElementById('adminPwd');
-  const btn = document.getElementById('eyeBtn');
-  if(inp.type==='password'){ inp.type='text'; btn.textContent='🙈'; }
-  else { inp.type='password'; btn.textContent='👁'; }
+function saveBasePath(){
+  const v=document.getElementById('basePath').value.trim();
+  if(!v){toast('Enter base path','error');return;}
+  basePath=v; localStorage.setItem('savic_base_path',v);
+  document.getElementById('basePathStatus').innerHTML=`<div class="cfg-saved">✅ Base path saved: <strong>${v}</strong></div>`;
+  toast('✅ Base path saved','success');
+}
+function createEvent(){
+  const name=document.getElementById('newEventName').value.trim();
+  const file=document.getElementById('newEventFile').value.trim();
+  if(!name){toast('Enter event name','error');return;}
+  if(!file){toast('Enter Excel file name','error');return;}
+  if(!basePath){toast('Save Base OneDrive Path first','error');return;}
+  const fname=file.endsWith('.xlsx')?file:file+'.xlsx';
+  // folder name = sanitized event name
+  const folder=name.replace(/[^a-zA-Z0-9\s]/g,'').replace(/\s+/g,'_').slice(0,40);
+  const ev={id:Date.now(),name,folder,file:fname,created:new Date().toLocaleDateString('en-IN'),active:true};
+  events.push(ev);
+  saveEvents();
+  renderAdminEvents();
+  document.getElementById('newEventName').value='';
+  document.getElementById('newEventFile').value='';
+  toast('✅ Event created: '+name,'success');
+
+  // Show path to create on OneDrive
+  const fullFolder=basePath.replace(/^\/|\/$/g,'')+'/'+folder;
+  alert('📁 Please create this folder + Excel file on OneDrive:\n\nFolder: '+fullFolder+'\nFile: '+fname+'\n\nAdd headers in Row 1:\nS.No | Captured By | Name | Company | Designation | Phone | Email | Requirements | Captured At');
+}
+function toggleEventActive(id){
+  events=events.map(e=>e.id===id?{...e,active:!e.active}:e);
+  saveEvents();renderAdminEvents();
+}
+function deleteEvent(id){
+  if(!confirm('Delete this event? Leads in OneDrive will NOT be deleted.'))return;
+  events=events.filter(e=>e.id!==id);
+  saveEvents();renderAdminEvents();
+  toast('Event removed','info');
+}
+function renderAdminEvents(){
+  const el=document.getElementById('adminEventList');
+  if(!el)return;
+  if(!events.length){el.innerHTML='<div style="color:#9ca3af;font-size:13px">No events yet — create one above</div>';return;}
+  el.innerHTML=events.map(ev=>`
+    <div style="background:${ev.active?'#f0fdf4':'#f8fafc'};border:1px solid ${ev.active?'#bbf7d0':'#e5e7eb'};border-radius:8px;padding:10px 12px;margin-bottom:8px">
+      <div style="font-weight:700;font-size:13px;color:#1f2937">📅 ${ev.name}</div>
+      <div style="font-size:11px;color:#6b7280;margin-top:2px">📁 ${basePath}/${ev.folder}/${ev.file}</div>
+      <div style="font-size:11px;color:#9ca3af">Created: ${ev.created}</div>
+      <div style="display:flex;gap:6px;margin-top:8px">
+        <button onclick="toggleEventActive(${ev.id})" style="flex:1;padding:6px;border:1px solid #d1d5db;border-radius:6px;background:#fff;font-size:11px;cursor:pointer">
+          ${ev.active?'🔴 Deactivate':'🟢 Activate'}
+        </button>
+        <button onclick="deleteEvent(${ev.id})" style="flex:1;padding:6px;border:1px solid #fca5a5;border-radius:6px;background:#fee2e2;color:#ef4444;font-size:11px;cursor:pointer">
+          🗑 Delete
+        </button>
+      </div>
+    </div>`).join('');
 }
 
-async function loadOneDriveFolders() {
-  toast('Loading OneDrive folders...','loading');
-  document.getElementById('folderList').innerHTML = '<div style="color:#6b7280;font-size:13px;padding:12px;text-align:center">⏳ Connecting to OneDrive...</div>';
-  document.getElementById('folderPicker').style.display='block';
-  try {
-    const data = await callClaude([{role:'user',content:
-      `List all folders in the root of my OneDrive. Return ONLY a JSON array of folder name strings. No markdown, no explanation. Example: ["Folder1","Folder2","Documents"]`
-    }], 'You are a Microsoft 365 assistant. Use OneDrive tools to list folders. Return only a JSON array of folder name strings.', 800);
-    const txt = extractTxt(data).replace(/```json|```/g,'').trim();
+// ─── HELPERS ─────────────────────────────────────────────────────────────────
+function clearForm(){['fName','fCompany','fPhone','fEmail','fDesig','fReq'].forEach(id=>{const el=document.getElementById(id);el.value='';el.classList.remove('filled');});const img=document.getElementById('cardPreview');img.src='';img.style.display='none';document.getElementById('interimTxt').textContent='';}
+function setF(id,val){if(val&&val.trim()){const el=document.getElementById(id);el.value=val.trim();el.classList.add('filled');}}
+function updateBadge(n){document.getElementById('badge').textContent=n||0;}
+function saveEvents(){localStorage.setItem(EVENTS_KEY,JSON.stringify(events));}
+function toB64(file){return new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result);r.onerror=rej;r.readAsDataURL(file);});}
+function extractTxt(data){if(!data?.content)return'';return data.content.filter(b=>b.type==='text').map(b=>b.text).join('').trim();}
+async function callClaude(messages,system,max_tokens=500){const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens,system,messages})});return r.json();}
 
-    // Check if response indicates auth needed
-    if(txt.toLowerCase().includes('sign in')||txt.toLowerCase().includes('login')||
-       txt.toLowerCase().includes('auth')||txt.toLowerCase().includes('permission')||
-       txt.toLowerCase().includes('unauthorized')||txt.toLowerCase().includes('401')||
-       txt===''||txt==='[]'||txt.startsWith('{')){
-      showSignInPrompt();
-      return;
-    }
-    const folders = JSON.parse(txt);
-    document.getElementById('statusBar').classList.remove('show');
-    renderFolderList(folders, '', 'root');
-  } catch(e) {
-    showSignInPrompt();
-  }
-}
-
-function showSignInPrompt() {
-  document.getElementById('statusBar').classList.remove('show');
-  document.getElementById('folderList').innerHTML = `
-    <div style="padding:20px;text-align:center">
-      <div style="font-size:32px;margin-bottom:8px">☁️</div>
-      <div style="font-size:14px;font-weight:700;color:#1f2937;margin-bottom:4px">Sign in to Microsoft</div>
-      <div style="font-size:12px;color:#6b7280;margin-bottom:16px">Connect your Microsoft 365 account to browse OneDrive folders</div>
-      <a href="https://login.microsoftonline.com/common/oauth2/v2.0/authorize?client_id=00000003-0000-0000-c000-000000000000&response_type=token&redirect_uri=${encodeURIComponent(window.location.href)}&scope=Files.ReadWrite.All" 
-         target="_blank"
-         style="display:inline-flex;align-items:center;gap:8px;background:#0078d4;color:#fff;border-radius:8px;padding:11px 20px;font-size:14px;font-weight:700;text-decoration:none">
-        <span style="font-size:18px">🔑</span> Sign in with Microsoft
-      </a>
-      <div style="font-size:11px;color:#9ca3af;margin-top:12px">After signing in, tap Browse again</div>
-    </div>`;
-}
-
-function renderFolderList(folders, parentPath, level) {
-  const el = document.getElementById('folderList');
-  if(!folders.length){ el.innerHTML='<div style="color:#6b7280;font-size:13px;padding:8px">No folders found</div>'; return; }
-  el.innerHTML = folders.map(f => {
-    const fullPath = parentPath ? parentPath+'/'+f : f;
-    return `<div onclick="selectFolder('${fullPath}')" style="padding:10px 12px;border-bottom:1px solid #f1f5f9;cursor:pointer;font-size:13px;color:#1f2937;display:flex;align-items:center;gap:8px;background:#fff" onmouseover="this.style.background='#eff6ff'" onmouseout="this.style.background='#fff'">
-      <span>📁</span> <span>${f}</span>
-      <span style="margin-left:auto;color:#9ca3af;font-size:11px">Tap to select →</span>
-    </div>`;
-  }).join('');
-}
-
-function selectFolder(path) {
-  document.getElementById('selectedFolderDisplay').textContent = '📁 ' + path;
-  document.getElementById('selectedFolderDisplay').style.display = 'block';
-  document.getElementById('folderPicker').style.display = 'none';
-  document.getElementById('adminFolder').value = path;
-  toast('Folder selected: ' + path, 'success');
-}
-
-async function saveAdminConfig() {
-  const folder = document.getElementById('adminFolder').value.trim();
-  const file = document.getElementById('adminFile').value.trim();
-  if(!folder){ toast('Please select a OneDrive folder first','error'); return; }
-  if(!file){ toast('Enter Excel file name','error'); return; }
-  const fname = file.endsWith('.xlsx')?file:file+'.xlsx';
-  toast('Setting up OneDrive...','loading');
-  try {
-    const data = await callClaude([{role:'user',content:
-      `Create an Excel file named "${fname}" in the OneDrive folder "${folder}". Create the folder if it doesn't exist. The Excel must have these column headers in row 1: S.No, Captured By, Name, Company, Designation, Phone, Email, Requirements, Captured At. If the file already exists do not overwrite it. Reply only "DONE" when finished.`
-    }], 'You are a Microsoft 365 assistant. Use OneDrive tools to create files and folders.', 400);
-    const txt = extractTxt(data).toLowerCase();
-    cfg = {folder, file:fname};
-    localStorage.setItem(CFG_KEY, JSON.stringify(cfg));
-    document.getElementById('headerSub').textContent = '📁 '+folder+' / '+fname;
-    if(txt.includes('done')||txt.includes('created')||txt.includes('success')||txt.includes('exist')) {
-      document.getElementById('configStatus').innerHTML = `<div class="config-saved">✅ Excel ready on OneDrive!<br><strong>📁 ${folder} / ${fname}</strong></div>`;
-      toast('✅ OneDrive configured!','success');
-    } else {
-      document.getElementById('configStatus').innerHTML = `<div class="config-saved">Config saved. OneDrive response: ${txt.slice(0,60)}</div>`;
-      toast('Config saved','info');
-    }
-  } catch {
-    cfg = {folder, file:fname};
-    localStorage.setItem(CFG_KEY, JSON.stringify(cfg));
-    document.getElementById('configStatus').innerHTML = `<div class="config-saved">Config saved locally.</div>`;
-    toast('Saved locally — OneDrive unreachable','info');
-  }
-}
-
-// ── helpers ───────────────────────────────────────────────────────────────────
-function clearForm() {
-  ['fName','fCompany','fPhone','fEmail','fDesig','fReq'].forEach(id=>{
-    const el=document.getElementById(id); el.value=''; el.classList.remove('filled');
-  });
-  const img=document.getElementById('cardPreview'); img.src=''; img.style.display='none';
-  document.getElementById('interimTxt').textContent='';
-}
-function setField(id, val) {
-  if(val&&val.trim()){ const el=document.getElementById(id); el.value=val.trim(); el.classList.add('filled'); }
-}
-function updateBadge(n){ document.getElementById('badge').textContent=n; }
-function toB64(file){ return new Promise((res,rej)=>{ const r=new FileReader(); r.onload=()=>res(r.result); r.onerror=rej; r.readAsDataURL(file); }); }
-function extractTxt(data){ if(!data?.content) return ''; return data.content.filter(b=>b.type==='text').map(b=>b.text).join('').trim(); }
-
-async function callClaude(messages, system, max_tokens=500) {
-  const resp = await fetch('https://api.anthropic.com/v1/messages',{
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({
-      model:'claude-sonnet-4-20250514',
-      max_tokens, system, messages,
-      mcp_servers:[{type:'url',url:'https://microsoft365.mcp.claude.com/mcp',name:'m365'}]
-    })
-  });
-  return resp.json();
-}
-
-// init
-if(cfg.folder) document.getElementById('headerSub').textContent='📁 '+cfg.folder+' / '+cfg.file;
+// ─── INIT ─────────────────────────────────────────────────────────────────────
+parseToken();
+if(msToken){ goStep('name'); } else { goStep('signin'); }
 </script>
 </body>
 </html>
