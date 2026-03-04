@@ -298,9 +298,34 @@ input.filled{border-color:#10b981;background:#f0fdf4}
           <button class="btn btn-secondary btn-sm" onclick="genToken()">Auto</button>
         </div>
       </div>
-      <div class="frow"><label>OneDrive Folder Path * <span style="font-weight:400;text-transform:none;letter-spacing:0">(where Excel will be saved)</span></label>
-        <input type="text" id="newEvFolder" placeholder="e.g. Marketing/Wunder/Events/SAP-Mumbai"/>
-        <p style="font-size:11px;color:#94a3b8;margin-top:4px">📁 Path inside your OneDrive. Excel file will be auto-created as <em>EventName_Leads.xlsx</em></p>
+      <div class="frow"><label>OneDrive Folder * <span style="font-weight:400;text-transform:none;letter-spacing:0">(where Excel will be saved)</span></label>
+        <div style="display:flex;gap:8px;align-items:flex-start">
+          <input type="text" id="newEvFolder" placeholder="e.g. SAVIC Marketing/Events/2026" style="flex:1"/>
+          <button class="btn btn-green btn-sm" onclick="openFolderPicker()" id="browseBtn" style="white-space:nowrap;margin-top:0">📁 Browse</button>
+        </div>
+        <div id="selectedFolderDisplay" style="display:none;margin-top:6px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:7px;padding:8px 10px;font-size:12px;color:#166534">
+          ✅ Selected: <b id="selectedFolderName"></b>
+        </div>
+        <p style="font-size:11px;color:#94a3b8;margin-top:4px">📁 Browse your OneDrive or type path manually</p>
+      </div>
+
+      <!-- Folder Picker Modal -->
+      <div id="folderPickerModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1000;padding:20px">
+        <div style="background:#fff;border-radius:14px;max-width:500px;margin:0 auto;max-height:80vh;display:flex;flex-direction:column;overflow:hidden">
+          <div style="padding:14px 16px;border-bottom:1px solid #e2e8f0;display:flex;align-items:center;justify-content:space-between">
+            <div>
+              <div style="font-weight:600;font-size:15px">📁 Choose OneDrive Folder</div>
+              <div id="fpBreadcrumb" style="font-size:11px;color:#64748b;margin-top:2px">My Drive</div>
+            </div>
+            <button onclick="closeFolderPicker()" style="background:none;border:none;font-size:20px;cursor:pointer;color:#64748b">✕</button>
+          </div>
+          <div id="fpLoading" style="padding:30px;text-align:center;color:#64748b;font-size:13px">⏳ Loading folders…</div>
+          <div id="fpList" style="overflow-y:auto;flex:1;padding:8px"></div>
+          <div style="padding:12px 16px;border-top:1px solid #e2e8f0;display:flex;gap:8px">
+            <button class="btn btn-secondary btn-sm" onclick="fpGoUp()" id="fpUpBtn" style="display:none">⬆ Up</button>
+            <button class="btn btn-primary btn-sm" onclick="fpSelectCurrent()" style="flex:1">✅ Select This Folder</button>
+          </div>
+        </div>
       </div>
       <div class="frow"><label>Excel File Name</label>
         <input type="text" id="newEvFile" placeholder="e.g. SAP_Mumbai_Leads (no .xlsx needed)"/>
@@ -376,7 +401,7 @@ async function loadMsUser(token) {
 
     // ── SECURITY: Only allow specific admin accounts ─────────────────────────
     const email = (u.mail || u.userPrincipalName || '').toLowerCase();
-    if (!ALLOWED_ADMINS.includes(email)) {
+    if (!ALLOWED_ADMINS_LIST.includes(email)) {
       sessionStorage.removeItem(TOKEN_KEY);
       toast('❌ Access denied. Only authorised SAVIC admins can sign in.', 'err');
       window.location.href = `https://login.microsoftonline.com/${TENANT}/oauth2/v2.0/logout`;
@@ -731,7 +756,7 @@ function cap(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
 
 // ─── LEADS TAB ───────────────────────────────────────────────────────────────
 function isAdmin() {
-  return msUser && ALLOWED_ADMINS.includes(msUser.email.toLowerCase());
+  return msUser && ALLOWED_ADMINS_LIST.includes(msUser.email.toLowerCase());
 }
 
 function renderLeads() {
@@ -920,6 +945,89 @@ function toast(msg, type='info') {
   el.textContent = msg;
   el.classList.add('show');
   setTimeout(() => el.classList.remove('show'), 3200);
+}
+
+// ─── FOLDER PICKER ───────────────────────────────────────────────────────────
+let fpStack = []; // breadcrumb stack [{id, name}]
+
+async function openFolderPicker() {
+  if (!msToken) { toast('Please sign in with Microsoft first', 'err'); return; }
+  document.getElementById('folderPickerModal').style.display = 'block';
+  fpStack = [];
+  await fpLoadFolder('root', 'My Drive');
+}
+
+function closeFolderPicker() {
+  document.getElementById('folderPickerModal').style.display = 'none';
+}
+
+async function fpLoadFolder(folderId, folderName) {
+  const listEl   = document.getElementById('fpList');
+  const loadEl   = document.getElementById('fpLoading');
+  const upBtn    = document.getElementById('fpUpBtn');
+  const breadcrumb = document.getElementById('fpBreadcrumb');
+
+  listEl.innerHTML = '';
+  loadEl.style.display = 'block';
+
+  // Breadcrumb
+  const path = fpStack.map(f => f.name).join(' / ');
+  breadcrumb.textContent = path ? 'My Drive / ' + path : 'My Drive';
+  upBtn.style.display = fpStack.length > 0 ? 'inline-flex' : 'none';
+
+  const token = await getAccessToken();
+  const url = folderId === 'root'
+    ? 'https://graph.microsoft.com/v1.0/me/drive/root/children?$filter=folder ne null&$select=id,name,folder&$top=100'
+    : `https://graph.microsoft.com/v1.0/me/drive/items/${folderId}/children?$filter=folder ne null&$select=id,name,folder&$top=100`;
+
+  try {
+    const r = await fetch(url, { headers:{ Authorization:'Bearer '+token } });
+    const data = await r.json();
+    loadEl.style.display = 'none';
+
+    if (!data.value || data.value.length === 0) {
+      listEl.innerHTML = '<div style="padding:20px;text-align:center;color:#94a3b8;font-size:13px">No subfolders found<br><span style="font-size:11px">You can select this folder</span></div>';
+      return;
+    }
+
+    listEl.innerHTML = data.value
+      .sort((a,b) => a.name.localeCompare(b.name))
+      .map(f => `
+        <div onclick="fpEnterFolder('${f.id}','${f.name.replace(/'/g,"\\'")}\")"
+          style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;
+          border-bottom:1px solid #f1f5f9;cursor:pointer;transition:.15s"
+          onmouseover="this.style.background='#f0f9ff'" onmouseout="this.style.background=''">
+          <div style="display:flex;align-items:center;gap:10px">
+            <span style="font-size:20px">📁</span>
+            <span style="font-size:14px;color:#1e293b">${f.name}</span>
+          </div>
+          <span style="color:#94a3b8;font-size:12px">▶</span>
+        </div>`).join('');
+  } catch(e) {
+    loadEl.style.display = 'none';
+    listEl.innerHTML = '<div style="padding:20px;text-align:center;color:#dc2626;font-size:13px">❌ Error loading folders</div>';
+  }
+}
+
+function fpEnterFolder(id, name) {
+  fpStack.push({ id, name });
+  fpLoadFolder(id, name);
+}
+
+function fpGoUp() {
+  fpStack.pop();
+  const parent = fpStack.length > 0 ? fpStack[fpStack.length-1] : { id:'root', name:'My Drive' };
+  fpLoadFolder(parent.id, parent.name);
+}
+
+function fpSelectCurrent() {
+  // Build path from stack
+  const path = fpStack.map(f => f.name).join('/');
+  document.getElementById('newEvFolder').value = path || '';
+  document.getElementById('selectedFolderName').textContent = path || 'My Drive (root)';
+  document.getElementById('selectedFolderDisplay').style.display = 'block';
+  closeFolderPicker();
+  toast('✅ Folder selected: ' + (path || 'Root'), 'ok');
 }
 
 // ─── BOOT ─────────────────────────────────────────────────────────────────────
