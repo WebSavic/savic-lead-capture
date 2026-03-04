@@ -4,318 +4,495 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
 <title>SAVIC Lead Capture</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
-  *{box-sizing:border-box;margin:0;padding:0}
-  body{font-family:'Segoe UI',sans-serif;background:#f0f4f8;min-height:100vh}
-  .header{background:linear-gradient(135deg,#0a2d6b,#1a56c4);color:#fff;padding:16px 20px;text-align:center}
-  .header h1{font-size:20px;font-weight:700}
-  .header p{font-size:12px;opacity:.8;margin-top:4px}
-  .tabs{display:flex;background:#fff;border-bottom:2px solid #e2e8f0}
-  .tab{flex:1;padding:12px;text-align:center;font-size:13px;font-weight:600;color:#64748b;cursor:pointer;border-bottom:3px solid transparent;transition:.2s}
-  .tab.active{color:#1a56c4;border-bottom-color:#1a56c4}
-  .container{padding:16px;max-width:480px;margin:0 auto}
-
-  /* SCAN CARD */
-  .scan-card{background:linear-gradient(135deg,#0a2d6b,#1a56c4);border-radius:16px;padding:20px;margin-bottom:12px;text-align:center;color:#fff}
-  .scan-card h2{font-size:16px;font-weight:700;margin-bottom:4px}
-  .scan-card p{font-size:12px;opacity:.8;margin-bottom:18px}
-  .scan-btn{background:#fff;color:#1a56c4;border:none;border-radius:12px;padding:14px 24px;font-size:15px;font-weight:700;cursor:pointer;width:100%;display:flex;align-items:center;justify-content:center;gap:8px;transition:.2s}
-  .scan-btn:hover{background:#eff6ff}
-  .scan-btn:active{transform:scale(.97)}
-  #cardInput{display:none}
-
-  /* PREVIEW */
-  .preview-wrap{margin-top:14px;display:none}
-  .preview-wrap img{width:100%;border-radius:10px;border:2px solid rgba(255,255,255,.3)}
-  .scanning-indicator{display:none;margin-top:12px;align-items:center;justify-content:center;gap:8px;font-size:13px;opacity:.9}
-  .scanning-indicator.show{display:flex}
-  .spinner{width:18px;height:18px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .8s linear infinite}
-  @keyframes spin{to{transform:rotate(360deg)}}
-
-  /* FIELDS */
-  .card{background:#fff;border-radius:12px;padding:16px;box-shadow:0 2px 8px rgba(0,0,0,.08);margin-bottom:12px}
-  .field-row{margin-bottom:14px}
-  .field-row:last-child{margin-bottom:0}
-  label{display:block;font-size:12px;font-weight:600;color:#374151;margin-bottom:5px;text-transform:uppercase;letter-spacing:.4px}
-  input,textarea{width:100%;border:1.5px solid #d1d5db;border-radius:8px;padding:10px 12px;font-size:14px;color:#1f2937;outline:none;transition:.2s}
-  input:focus,textarea:focus{border-color:#1a56c4;box-shadow:0 0 0 3px rgba(26,86,196,.1)}
-  input.filled,textarea.filled{border-color:#10b981;background:#f0fdf4}
-  textarea{resize:vertical;min-height:70px}
-
-  .btn{width:100%;padding:13px;border:none;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;transition:.2s}
-  .btn-primary{background:linear-gradient(135deg,#1a56c4,#0a2d6b);color:#fff}
-  .btn-primary:active{opacity:.85}
-  .btn-secondary{background:#f1f5f9;color:#374151;border:1.5px solid #d1d5db}
-  .btn-danger{background:#fee2e2;color:#ef4444;border:1.5px solid #fca5a5}
-  .btn-success{background:linear-gradient(135deg,#059669,#047857);color:#fff}
-  .btn-group{display:flex;gap:8px;margin-top:8px}
-  .btn-group .btn{flex:1}
-
-  .counter{text-align:center;padding:20px;color:#6b7280;font-size:14px}
-  .counter .num{font-size:36px;font-weight:700;color:#1a56c4;display:block}
-  .lead-item{background:#fff;border-radius:10px;padding:12px 14px;margin-bottom:10px;box-shadow:0 1px 4px rgba(0,0,0,.06);border-left:4px solid #1a56c4}
-  .lead-name{font-weight:700;font-size:15px;color:#1f2937}
-  .lead-co{font-size:13px;color:#4b5563;margin-top:2px}
-  .lead-ph{font-size:12px;color:#6b7280;margin-top:4px}
-  .lead-req{font-size:12px;color:#374151;margin-top:6px;background:#f8fafc;padding:6px 8px;border-radius:6px}
-  .lead-time{font-size:11px;color:#9ca3af;margin-top:4px}
-  .del-btn{float:right;background:none;border:none;color:#9ca3af;cursor:pointer;font-size:16px;padding:0 4px}
-  .del-btn:hover{color:#ef4444}
-  .empty{text-align:center;padding:40px 20px;color:#9ca3af}
-  .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#1f2937;color:#fff;padding:10px 20px;border-radius:20px;font-size:13px;z-index:999;opacity:0;transition:.3s;pointer-events:none;max-width:90vw;text-align:center}
-  .toast.show{opacity:1}
-  .badge{display:inline-block;background:#dcfce7;color:#166534;font-size:11px;padding:2px 8px;border-radius:10px;font-weight:600;margin-left:6px}
-  .divider{display:flex;align-items:center;gap:10px;margin:4px 0 14px;color:#9ca3af;font-size:12px}
-  .divider::before,.divider::after{content:'';flex:1;height:1px;background:#e5e7eb}
-  .tip{font-size:11px;color:#9ca3af;text-align:center;margin-top:10px}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',sans-serif;background:#f0f4f8;min-height:100vh}
+.header{background:linear-gradient(135deg,#0a2d6b,#1a56c4);color:#fff;padding:16px 20px;text-align:center}
+.header h1{font-size:20px;font-weight:700}
+.header p{font-size:12px;opacity:.8;margin-top:4px}
+.tabs{display:flex;background:#fff;border-bottom:2px solid #e2e8f0}
+.tab{flex:1;padding:12px 4px;text-align:center;font-size:12px;font-weight:600;color:#64748b;cursor:pointer;border-bottom:3px solid transparent}
+.tab.active{color:#1a56c4;border-bottom-color:#1a56c4}
+.pane{display:none;padding:16px;max-width:480px;margin:0 auto}
+.pane.active{display:block}
+.card{background:#fff;border-radius:12px;padding:16px;box-shadow:0 2px 8px rgba(0,0,0,.08);margin-bottom:12px}
+.status-bar{padding:10px 16px;font-size:13px;font-weight:600;text-align:center;display:none}
+.status-bar.show{display:block}
+label{display:block;font-size:11px;font-weight:600;color:#374151;margin-bottom:4px;text-transform:uppercase;letter-spacing:.4px}
+input,textarea{width:100%;border:1.5px solid #d1d5db;border-radius:8px;padding:10px 12px;font-size:14px;color:#1f2937;outline:none;margin-bottom:12px;transition:.2s}
+input:focus,textarea:focus{border-color:#1a56c4;box-shadow:0 0 0 3px rgba(26,86,196,.1)}
+input.filled{border-color:#10b981;background:#f0fdf4}
+textarea.filled{border-color:#10b981;background:#f0fdf4}
+textarea{resize:vertical;min-height:70px;margin-bottom:0}
+.btn{width:100%;padding:13px;border:none;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;margin-bottom:8px}
+.btn-blue{background:linear-gradient(135deg,#1a56c4,#0a2d6b);color:#fff}
+.btn-green{background:linear-gradient(135deg,#059669,#047857);color:#fff}
+.btn-gray{background:#f1f5f9;color:#374151;border:1.5px solid #d1d5db}
+.btn-red{background:#fee2e2;color:#ef4444;border:1.5px solid #fca5a5}
+.scan-box{background:linear-gradient(135deg,#0a2d6b,#1a56c4);border-radius:14px;padding:18px;margin-bottom:12px;text-align:center;color:#fff}
+.scan-box h2{font-size:15px;font-weight:700;margin-bottom:4px}
+.scan-box p{font-size:12px;opacity:.8;margin-bottom:14px}
+.scan-label{background:#fff;color:#1a56c4;border-radius:10px;padding:13px;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px}
+#cardPreview{width:100%;border-radius:8px;margin-top:10px;border:2px solid rgba(255,255,255,.3);display:none}
+.voice-box{background:#fff;border-radius:12px;padding:14px;box-shadow:0 2px 8px rgba(0,0,0,.08);margin-bottom:12px;text-align:center}
+.mic-btn{width:66px;height:66px;border-radius:50%;border:none;font-size:28px;cursor:pointer;background:linear-gradient(135deg,#1a56c4,#0a2d6b);color:#fff;box-shadow:0 4px 14px rgba(26,86,196,.3);margin:0 auto;display:block}
+.mic-btn.on{background:linear-gradient(135deg,#ef4444,#b91c1c);box-shadow:0 0 0 8px rgba(239,68,68,.15)}
+#interimTxt{font-size:12px;color:#6b7280;font-style:italic;min-height:18px;margin-top:6px}
+.user-bar{background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:8px 12px;font-size:13px;color:#166534;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center}
+.name-gate{text-align:center;padding:8px 0}
+.counter{text-align:center;padding:16px}
+.counter .num{font-size:36px;font-weight:700;color:#1a56c4;display:block}
+.lead-item{background:#fff;border-radius:10px;padding:12px 14px;margin-bottom:10px;box-shadow:0 1px 4px rgba(0,0,0,.06);border-left:4px solid #1a56c4}
+.lead-name{font-weight:700;font-size:14px;color:#1f2937}
+.lead-co{font-size:12px;color:#4b5563;margin-top:2px}
+.lead-ph{font-size:12px;color:#6b7280;margin-top:3px}
+.lead-req{font-size:12px;color:#374151;margin-top:5px;background:#f8fafc;padding:5px 8px;border-radius:6px}
+.lead-meta{font-size:11px;color:#9ca3af;margin-top:3px}
+.badge{display:inline-block;background:#dcfce7;color:#166534;font-size:10px;padding:1px 7px;border-radius:10px;font-weight:600;margin-left:4px}
+.empty{text-align:center;padding:40px 20px;color:#9ca3af}
+.admin-note{font-size:11px;color:#9ca3af;margin-top:4px}
+.config-saved{background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:10px 12px;font-size:13px;color:#166534;margin-top:12px}
 </style>
 </head>
 <body>
 
 <div class="header">
   <h1>🎯 SAVIC Lead Capture</h1>
-  <p>SAP Workshop — Instant Business Card Scan</p>
+  <p id="headerSub">SAP Workshop — Shared OneDrive Excel</p>
 </div>
 
 <div class="tabs">
-  <div class="tab active" id="tabCapture" onclick="switchTab('capture')">📸 Capture Lead</div>
-  <div class="tab" id="tabLeads" onclick="switchTab('leads')">📋 All Leads <span class="badge" id="countBadge">0</span></div>
+  <div class="tab active" onclick="showTab('capture')">📸 Capture</div>
+  <div class="tab" onclick="showTab('leads')">📋 Leads <span class="badge" id="badge">0</span></div>
+  <div class="tab" onclick="showTab('admin')">⚙️ Admin</div>
 </div>
 
-<div id="capturePane" class="container">
+<div id="statusBar" class="status-bar"></div>
 
-  <div class="scan-card">
-    <h2>📸 Scan Business Card</h2>
-    <p>Point camera at card — AI fills all fields instantly</p>
+<!-- CAPTURE TAB -->
+<div id="paneCapture" class="pane active">
 
-    <button class="scan-btn" onclick="document.getElementById('cardInput').click()">
-      <span style="font-size:22px">📷</span>
-      <span>Take Photo / Choose Image</span>
-    </button>
-    <input type="file" id="cardInput" accept="image/*" capture="environment" onchange="handleImage(event)"/>
-
-    <div class="preview-wrap" id="previewWrap">
-      <img id="previewImg" src="" alt="Card preview"/>
-    </div>
-    <div class="scanning-indicator" id="scanIndicator">
-      <div class="spinner"></div>
-      <span>AI is reading the card...</span>
-    </div>
+  <!-- Name gate -->
+  <div id="nameGate" class="card name-gate">
+    <div style="font-size:28px;margin-bottom:8px">👋</div>
+    <div style="font-size:16px;font-weight:700;margin-bottom:4px">Welcome</div>
+    <div style="font-size:13px;color:#6b7280;margin-bottom:14px">Enter your name before capturing leads</div>
+    <input type="text" id="inputUserName" placeholder="Your name e.g. Meghan" style="margin-bottom:12px" onkeydown="if(event.key==='Enter')setUserName()"/>
+    <button class="btn btn-blue" onclick="setUserName()">Start Capturing →</button>
   </div>
 
-  <div class="divider">review & edit fields below</div>
+  <!-- Capture form (hidden until name set) -->
+  <div id="captureForm" style="display:none">
+    <div class="user-bar">
+      <span>👤 Capturing as: <strong id="displayName"></strong></span>
+      <span style="cursor:pointer;font-size:11px;color:#6b7280" onclick="resetName()">Change</span>
+    </div>
 
-  <div class="card">
-    <div class="field-row">
+    <!-- Business card scan -->
+    <div class="scan-box">
+      <h2>📸 Scan Business Card</h2>
+      <p>Point camera at card — AI fills all fields instantly</p>
+      <label class="scan-label">
+        <span style="font-size:20px">📷</span> Take Photo / Choose Image
+        <input type="file" accept="image/*" capture="environment" onchange="handleScan(event)" style="display:none"/>
+      </label>
+      <img id="cardPreview" alt="card preview"/>
+    </div>
+
+    <!-- Voice -->
+    <div class="voice-box">
+      <div style="font-size:12px;color:#6b7280;margin-bottom:10px">🎙 Or speak — name, company, phone, requirements</div>
+      <button class="mic-btn" id="micBtn" onclick="toggleVoice()">🎙</button>
+      <div id="interimTxt"></div>
+    </div>
+
+    <!-- Manual fields -->
+    <div class="card">
+      <div style="font-size:11px;font-weight:700;color:#9ca3af;margin-bottom:12px;text-transform:uppercase;letter-spacing:.5px">Fill / Edit Fields</div>
       <label>Full Name *</label>
       <input type="text" id="fName" placeholder="e.g. Rajesh Kumar"/>
-    </div>
-    <div class="field-row">
-      <label>Company Name *</label>
+      <label>Company *</label>
       <input type="text" id="fCompany" placeholder="e.g. Tata Consultancy Services"/>
-    </div>
-    <div class="field-row">
-      <label>Phone Number *</label>
+      <label>Phone *</label>
       <input type="tel" id="fPhone" placeholder="e.g. 9876543210"/>
-    </div>
-    <div class="field-row">
       <label>Email</label>
       <input type="email" id="fEmail" placeholder="e.g. rajesh@company.com"/>
-    </div>
-    <div class="field-row">
       <label>Designation</label>
-      <input type="text" id="fDesig" placeholder="e.g. SAP Manager, IT Head"/>
-    </div>
-    <div class="field-row">
+      <input type="text" id="fDesig" placeholder="e.g. SAP Manager"/>
       <label>Requirements / Notes</label>
-      <textarea id="fReq" placeholder="Add requirements or notes here..."></textarea>
+      <textarea id="fReq" placeholder="SAP module needed, team size, timeline..."></textarea>
     </div>
-  </div>
 
-  <button class="btn btn-primary" onclick="saveLead()">💾 Save Lead</button>
-  <div class="btn-group">
-    <button class="btn btn-secondary" onclick="clearForm()">🗑 Clear</button>
+    <button class="btn btn-blue" onclick="saveLead()">💾 Save Lead to OneDrive</button>
+    <button class="btn btn-gray" onclick="clearForm()">🗑 Clear Form</button>
   </div>
-  <p class="tip">Scan card → AI fills fields → you add requirements → Save ✅</p>
-
 </div>
 
-<div id="leadsPane" class="container" style="display:none">
+<!-- LEADS TAB -->
+<div id="paneLeads" class="pane">
+  <div class="card counter">
+    <span class="num" id="leadsCount">0</span>
+    Total Leads on OneDrive
+  </div>
+  <button class="btn btn-blue" onclick="loadLeads()">🔄 Refresh from OneDrive</button>
+  <button class="btn btn-green" onclick="exportCSV()">📥 Export to CSV</button>
+  <div id="leadsList"><div class="empty"><p>Tap Refresh to load leads from OneDrive</p></div></div>
+</div>
+
+<!-- ADMIN TAB -->
+<div id="paneAdmin" class="pane">
   <div class="card">
-    <div class="counter">
-      <span class="num" id="totalCount">0</span>
-      Leads Captured
+    <div id="adminLock">
+      <div style="text-align:center;margin-bottom:14px">
+        <div style="font-size:32px;margin-bottom:6px">🔐</div>
+        <div style="font-size:16px;font-weight:700">Admin Access</div>
+        <div style="font-size:13px;color:#6b7280;margin-top:4px">Enter password to configure OneDrive</div>
+      </div>
+      <label>Admin Password</label>
+      <input type="password" id="adminPwd" placeholder="Enter password" onkeydown="if(event.key==='Enter')unlockAdmin()"/>
+      <button class="btn btn-blue" onclick="unlockAdmin()">Unlock</button>
+      <div class="admin-note" style="text-align:center">Default: savic@admin</div>
+    </div>
+    <div id="adminPanel" style="display:none">
+      <div style="font-size:15px;font-weight:700;margin-bottom:4px">⚙️ OneDrive Configuration</div>
+      <div style="font-size:13px;color:#6b7280;margin-bottom:16px">Set the shared Excel location once — all users write to this file</div>
+      <label>OneDrive Folder</label>
+      <input type="hidden" id="adminFolder"/>
+      <div id="selectedFolderDisplay" style="display:none;background:#eff6ff;border:1.5px solid #bfdbfe;border-radius:8px;padding:10px 12px;font-size:13px;color:#1e40af;font-weight:600;margin-bottom:8px"></div>
+      <button class="btn btn-gray" onclick="loadOneDriveFolders()" style="margin-bottom:12px">📂 Browse & Select Folder from OneDrive</button>
+
+      <!-- Folder picker dropdown -->
+      <div id="folderPicker" style="display:none;border:1.5px solid #bfdbfe;border-radius:10px;overflow:hidden;margin-bottom:12px">
+        <div style="background:#eff6ff;padding:8px 12px;font-size:12px;font-weight:600;color:#1e40af">Select a folder from your OneDrive:</div>
+        <div id="folderList" style="max-height:200px;overflow-y:auto;background:#fff"></div>
+        <div style="padding:8px 12px;background:#f8fafc">
+          <div style="font-size:11px;color:#6b7280;margin-bottom:6px">Or type a custom path:</div>
+          <input type="text" placeholder="e.g. SAVIC/Workshops/2026" oninput="document.getElementById('adminFolder').value=this.value;document.getElementById('selectedFolderDisplay').textContent='📁 '+this.value;document.getElementById('selectedFolderDisplay').style.display='block'" style="margin-bottom:6px"/>
+        </div>
+      </div>
+
+      <label>Excel File Name</label>
+      <input type="text" id="adminFile" placeholder="e.g. SAVICLeads.xlsx"/>
+      <div class="admin-note" style="margin-top:-10px;margin-bottom:14px">All team leads go into this single file</div>
+      <button class="btn btn-blue" onclick="saveAdminConfig()">✅ Save & Create Excel on OneDrive</button>
+      <div id="configStatus"></div>
     </div>
   </div>
-  <button class="btn btn-success" onclick="exportExcel()" style="margin-bottom:8px">📥 Export to Excel</button>
-  <button class="btn btn-danger" onclick="clearAll()" style="margin-bottom:16px">🗑 Clear All Leads</button>
-  <div id="leadsList"></div>
 </div>
-
-<div class="toast" id="toast"></div>
 
 <script>
-let leads = JSON.parse(localStorage.getItem('savic_leads5') || '[]');
+const CFG_KEY = 'savic_cfg_v2';
+let cfg = {};
+try { cfg = JSON.parse(localStorage.getItem(CFG_KEY)) || {}; } catch {}
+let userName = '';
+let leads = [];
+let srObj = null, voiceOn = false, fullTx = '';
 
-function switchTab(t){
-  document.getElementById('capturePane').style.display = t==='capture'?'block':'none';
-  document.getElementById('leadsPane').style.display = t==='leads'?'block':'none';
-  document.getElementById('tabCapture').classList.toggle('active', t==='capture');
-  document.getElementById('tabLeads').classList.toggle('active', t==='leads');
-  if(t==='leads') renderLeads();
-}
-
-async function handleImage(e){
-  const file = e.target.files[0];
-  if(!file) return;
-
-  // Show preview
-  const reader = new FileReader();
-  reader.onload = ev => {
-    document.getElementById('previewImg').src = ev.target.result;
-    document.getElementById('previewWrap').style.display = 'block';
-  };
-  reader.readAsDataURL(file);
-
-  // Show scanning
-  document.getElementById('scanIndicator').classList.add('show');
-
-  // Convert to base64
-  const base64 = await fileToBase64(file);
-  const b64data = base64.split(',')[1];
-  const mtype = file.type || 'image/jpeg';
-
-  try {
-    const resp = await fetch('https://api.anthropic.com/v1/messages',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({
-        model:'claude-sonnet-4-20250514',
-        max_tokens:400,
-        system:`You are a business card reader. Extract contact info and return ONLY a raw JSON object with keys: name, company, phone, email, designation, address. Use empty string "" for missing fields. For phone, return the most relevant mobile/direct number with country code if shown. No markdown, no explanation — only the JSON object.`,
-        messages:[{
-          role:'user',
-          content:[
-            {type:'image', source:{type:'base64', media_type: mtype, data: b64data}},
-            {type:'text', text:'Read this business card and return the contact info as JSON.'}
-          ]
-        }]
-      })
-    });
-
-    const data = await resp.json();
-    let txt = '';
-    if(data.content) txt = data.content.filter(b=>b.type==='text').map(b=>b.text).join('').trim();
-    const cleaned = txt.replace(/```json|```/g,'').trim();
-    const parsed = JSON.parse(cleaned);
-    fillFields(parsed);
-    document.getElementById('scanIndicator').classList.remove('show');
-    showToast('✅ Card scanned! Add requirements and save.');
-    // Focus requirements field
-    setTimeout(()=>document.getElementById('fReq').focus(), 400);
-
-  } catch(err){
-    document.getElementById('scanIndicator').classList.remove('show');
-    showToast('❌ Could not read card — please fill manually');
-  }
-
-  // Reset input so same image can be re-scanned
-  e.target.value = '';
-}
-
-function fillFields(d){
-  const set = (id, val) => {
-    if(val && String(val).trim()){
-      const el = document.getElementById(id);
-      el.value = String(val).trim();
-      el.classList.add('filled');
-    }
-  };
-  set('fName', d.name);
-  set('fCompany', d.company);
-  set('fPhone', d.phone);
-  set('fEmail', d.email);
-  set('fDesig', d.designation);
-  // Put address in notes if present
-  if(d.address && d.address.trim()){
-    const req = document.getElementById('fReq');
-    req.value = (req.value ? req.value + '\n' : '') + 'Address: ' + d.address.trim();
-    req.classList.add('filled');
-  }
-}
-
-function fileToBase64(file){
-  return new Promise((res,rej)=>{
-    const r = new FileReader();
-    r.onload = () => res(r.result);
-    r.onerror = rej;
-    r.readAsDataURL(file);
+// ── tabs ──────────────────────────────────────────────────────────────────────
+function showTab(t) {
+  document.querySelectorAll('.tab').forEach((el,i)=>{
+    el.classList.toggle('active', ['capture','leads','admin'][i]===t);
   });
+  ['capture','leads','admin'].forEach(id=>{
+    document.getElementById('pane'+id.charAt(0).toUpperCase()+id.slice(1)).classList.toggle('active', id===t);
+  });
+  if(t==='leads') loadLeads();
+  if(t==='admin') initAdmin();
 }
 
-function saveLead(){
-  const name = document.getElementById('fName').value.trim();
-  const company = document.getElementById('fCompany').value.trim();
-  const phone = document.getElementById('fPhone').value.trim();
-  if(!name){ showToast('⚠️ Name is required'); return; }
-  if(!company){ showToast('⚠️ Company is required'); return; }
-  if(!phone){ showToast('⚠️ Phone is required'); return; }
-  leads.unshift({
-    id: Date.now(), name, company, phone,
+// ── status ────────────────────────────────────────────────────────────────────
+function toast(msg, type) {
+  const el = document.getElementById('statusBar');
+  const colors = {info:['#eff6ff','#1e40af'], success:['#f0fdf4','#166534'], error:['#fef2f2','#991b1b'], loading:['#fffbeb','#92400e']};
+  const [bg, color] = colors[type] || colors.info;
+  el.style.background = bg; el.style.color = color;
+  el.textContent = (type==='loading'?'⏳ ':'')+msg;
+  el.classList.add('show');
+  if(type!=='loading') setTimeout(()=>el.classList.remove('show'), 3500);
+}
+
+// ── name gate ─────────────────────────────────────────────────────────────────
+function setUserName() {
+  const v = document.getElementById('inputUserName').value.trim();
+  if(!v) { toast('Enter your name','error'); return; }
+  userName = v;
+  document.getElementById('displayName').textContent = v;
+  document.getElementById('nameGate').style.display = 'none';
+  document.getElementById('captureForm').style.display = 'block';
+}
+function resetName() {
+  userName = '';
+  document.getElementById('nameGate').style.display = 'block';
+  document.getElementById('captureForm').style.display = 'none';
+  clearForm();
+}
+
+// ── business card scan ────────────────────────────────────────────────────────
+async function handleScan(e) {
+  const file = e.target.files[0]; if(!file) return;
+  const b64url = await toB64(file);
+  const img = document.getElementById('cardPreview');
+  img.src = b64url; img.style.display = 'block';
+  toast('AI is reading the card...','loading');
+  try {
+    const data = await callClaude([{role:'user',content:[
+      {type:'image',source:{type:'base64',media_type:file.type||'image/jpeg',data:b64url.split(',')[1]}},
+      {type:'text',text:'Read this business card. Return ONLY a raw JSON object with keys: name,company,phone,email,designation. Empty string for missing. No markdown, no explanation.'}
+    ]}], 'You are a business card reader. Return only raw JSON object.', 400);
+    const txt = extractTxt(data).replace(/```json|```/g,'').trim();
+    const p = JSON.parse(txt);
+    setField('fName', p.name); setField('fCompany', p.company);
+    setField('fPhone', p.phone); setField('fEmail', p.email); setField('fDesig', p.designation);
+    toast('✅ Card scanned! Add requirements and save.','success');
+    setTimeout(()=>document.getElementById('fReq').focus(),300);
+  } catch { toast('Could not read card — fill manually','error'); }
+  e.target.value='';
+}
+
+// ── voice ─────────────────────────────────────────────────────────────────────
+function toggleVoice() {
+  if(voiceOn) { stopVoice(true); return; }
+  const SR = window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SR) { toast('Voice not supported — use Chrome on Android','error'); return; }
+  srObj = new SR(); srObj.lang='en-IN'; srObj.continuous=true; srObj.interimResults=true;
+  fullTx='';
+  srObj.onresult=e=>{
+    let interim='';
+    for(let i=e.resultIndex;i<e.results.length;i++){
+      if(e.results[i].isFinal) fullTx+=e.results[i][0].transcript+' ';
+      else interim=e.results[i][0].transcript;
+    }
+    document.getElementById('interimTxt').textContent=(fullTx+interim).slice(-80);
+  };
+  srObj.onerror=()=>{ toast('Mic error — allow microphone access','error'); stopVoice(false); };
+  srObj.onend=()=>{ if(voiceOn) stopVoice(true); };
+  srObj.start();
+  voiceOn=true;
+  document.getElementById('micBtn').classList.add('on');
+  document.getElementById('micBtn').textContent='⏹';
+  toast('🎙 Listening... tap ⏹ to stop','info');
+}
+
+async function stopVoice(process) {
+  voiceOn=false;
+  document.getElementById('micBtn').classList.remove('on');
+  document.getElementById('micBtn').textContent='🎙';
+  try{srObj&&srObj.stop();}catch{}
+  if(!process||!fullTx.trim()) return;
+  toast('Filling fields with AI...','loading');
+  try {
+    const data = await callClaude([{role:'user',content:fullTx}],
+      'Extract lead info from spoken text. Return ONLY raw JSON with keys: name,company,phone,email,designation,requirements. Empty string for missing. No markdown.',400);
+    const txt = extractTxt(data).replace(/```json|```/g,'').trim();
+    const p = JSON.parse(txt);
+    setField('fName',p.name); setField('fCompany',p.company);
+    setField('fPhone',p.phone); setField('fEmail',p.email);
+    setField('fDesig',p.designation); setField('fReq',p.requirements);
+    document.getElementById('interimTxt').textContent='';
+    fullTx='';
+    toast('✅ Fields filled! Review and save.','success');
+  } catch {
+    document.getElementById('fReq').value=fullTx;
+    document.getElementById('fReq').classList.add('filled');
+    document.getElementById('interimTxt').textContent='';
+    fullTx='';
+    toast('Saved speech to Notes — fill other fields manually','info');
+  }
+}
+
+// ── save lead to onedrive ─────────────────────────────────────────────────────
+async function saveLead() {
+  if(!userName) { toast('Set your name first','error'); return; }
+  if(!document.getElementById('fName').value.trim()) { toast('Name is required','error'); return; }
+  if(!document.getElementById('fCompany').value.trim()) { toast('Company is required','error'); return; }
+  if(!document.getElementById('fPhone').value.trim()) { toast('Phone is required','error'); return; }
+  if(!cfg.folder||!cfg.file) { toast('Admin has not configured OneDrive yet — go to ⚙️ Admin tab','error'); return; }
+
+  const now = new Date().toLocaleString('en-IN');
+  const row = {
+    capturedBy: userName,
+    name: document.getElementById('fName').value.trim(),
+    company: document.getElementById('fCompany').value.trim(),
+    phone: document.getElementById('fPhone').value.trim(),
     email: document.getElementById('fEmail').value.trim(),
     designation: document.getElementById('fDesig').value.trim(),
     requirements: document.getElementById('fReq').value.trim(),
-    capturedAt: new Date().toLocaleString('en-IN')
-  });
-  save(); clearForm(); updateBadge();
-  showToast('✅ Lead saved: ' + name);
+    capturedAt: now
+  };
+
+  toast('Saving to OneDrive...','loading');
+  try {
+    const data = await callClaude([{role:'user',content:
+      `Append a new row to the Excel file named "${cfg.file}" located in the OneDrive folder "${cfg.folder}". The row data is: Captured By: "${row.capturedBy}", Name: "${row.name}", Company: "${row.company}", Designation: "${row.designation}", Phone: "${row.phone}", Email: "${row.email}", Requirements: "${row.requirements}", Captured At: "${row.capturedAt}". Add it after the last existing row without changing the headers. Reply only "DONE" when finished.`
+    }], 'You are a Microsoft 365 assistant. Use OneDrive and Excel tools to manage files.', 300);
+    const txt = extractTxt(data).toLowerCase();
+    if(txt.includes('done')||txt.includes('added')||txt.includes('success')||txt.includes('appended')) {
+      clearForm();
+      updateBadge(parseInt(document.getElementById('badge').textContent||'0')+1);
+      toast('✅ Lead saved to OneDrive!','success');
+    } else {
+      toast('OneDrive error — check config in Admin tab','error');
+    }
+  } catch {
+    toast('Could not reach OneDrive — check internet connection','error');
+  }
 }
 
-function clearForm(){
-  ['fName','fCompany','fPhone','fEmail','fDesig','fReq'].forEach(id=>{
-    const el = document.getElementById(id);
-    el.value = '';
-    el.classList.remove('filled');
-  });
-  document.getElementById('previewWrap').style.display = 'none';
-  document.getElementById('previewImg').src = '';
+// ── load leads ────────────────────────────────────────────────────────────────
+async function loadLeads() {
+  if(!cfg.folder||!cfg.file) { toast('Admin config not set','error'); return; }
+  toast('Loading from OneDrive...','loading');
+  try {
+    const data = await callClaude([{role:'user',content:
+      `Read all data rows from the Excel file "${cfg.file}" in OneDrive folder "${cfg.folder}". Return a JSON array of objects with keys: capturedBy, name, company, designation, phone, email, requirements, capturedAt. Skip the header row. Return only the raw JSON array.`
+    }], 'You are a Microsoft 365 assistant. Read Excel files and return JSON.', 2000);
+    const txt = extractTxt(data).replace(/```json|```/g,'').trim();
+    leads = JSON.parse(txt);
+    if(!Array.isArray(leads)) leads=[];
+    renderLeads();
+    toast('✅ Loaded '+leads.length+' leads','success');
+  } catch {
+    toast('Could not load from OneDrive','error');
+  }
 }
 
-function deleteLead(id){ leads=leads.filter(l=>l.id!==id); save(); updateBadge(); renderLeads(); showToast('Lead deleted'); }
-function clearAll(){ if(!confirm('Delete ALL leads?')) return; leads=[]; save(); updateBadge(); renderLeads(); }
-
-function renderLeads(){
-  document.getElementById('totalCount').textContent = leads.length;
+function renderLeads() {
   const el = document.getElementById('leadsList');
-  if(!leads.length){ el.innerHTML='<div class="empty"><p>No leads yet.<br>Scan a business card to add one!</p></div>'; return; }
-  el.innerHTML = leads.map(l=>`
+  document.getElementById('leadsCount').textContent = leads.length;
+  updateBadge(leads.length);
+  if(!leads.length){ el.innerHTML='<div class="empty"><p>No leads found in OneDrive file</p></div>'; return; }
+  el.innerHTML = leads.map((l,i)=>`
     <div class="lead-item">
-      <button class="del-btn" onclick="deleteLead(${l.id})">✕</button>
-      <div class="lead-name">${l.name}</div>
-      <div class="lead-co">🏢 ${l.company}${l.designation?' · '+l.designation:''}</div>
-      <div class="lead-ph">📞 ${l.phone}${l.email?' · 📧 '+l.email:''}</div>
+      <div class="lead-name">${l.name||'-'}</div>
+      <div class="lead-co">🏢 ${l.company||'-'}${l.designation?' · '+l.designation:''}</div>
+      <div class="lead-ph">📞 ${l.phone||'-'}${l.email?' · 📧 '+l.email:''}</div>
       ${l.requirements?`<div class="lead-req">💬 ${l.requirements}</div>`:''}
-      <div class="lead-time">⏰ ${l.capturedAt}</div>
+      <div class="lead-meta">👤 ${l.capturedBy||'?'} · ⏰ ${l.capturedAt||'-'}</div>
     </div>`).join('');
 }
 
-function exportExcel(){
-  if(!leads.length){ showToast('No leads to export'); return; }
-  const rows = leads.map((l,i)=>({'S.No':i+1,'Name':l.name,'Company':l.company,'Designation':l.designation||'','Phone':l.phone,'Email':l.email||'','Requirements':l.requirements||'','Captured At':l.capturedAt}));
-  const ws = XLSX.utils.json_to_sheet(rows);
-  ws['!cols']=[{wch:6},{wch:25},{wch:28},{wch:22},{wch:16},{wch:28},{wch:40},{wch:22}];
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, 'Leads');
-  XLSX.writeFile(wb, `SAVIC_Leads_${new Date().toISOString().slice(0,10)}.xlsx`);
-  showToast('✅ Excel downloaded!');
+function exportCSV() {
+  if(!leads.length){ toast('Load leads first','error'); return; }
+  const h = ['S.No','Captured By','Name','Company','Designation','Phone','Email','Requirements','Captured At'];
+  const rows = leads.map((l,i)=>[i+1,l.capturedBy||'',l.name||'',l.company||'',l.designation||'',l.phone||'',l.email||'',l.requirements||'',l.capturedAt||'']);
+  const csv = [h,...rows].map(r=>r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
+  a.download = 'SAVIC_Leads_'+new Date().toISOString().slice(0,10)+'.csv';
+  a.click();
+  toast('✅ Downloaded!','success');
 }
 
-function save(){ localStorage.setItem('savic_leads5', JSON.stringify(leads)); }
-function updateBadge(){ document.getElementById('countBadge').textContent=leads.length; document.getElementById('totalCount').textContent=leads.length; }
-function showToast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),3200); }
+// ── admin ─────────────────────────────────────────────────────────────────────
+function initAdmin() {
+  if(cfg.folder) { document.getElementById('adminFolder').value=cfg.folder; }
+  if(cfg.file) { document.getElementById('adminFile').value=cfg.file; }
+}
+function unlockAdmin() {
+  if(document.getElementById('adminPwd').value==='savic@admin'){
+    document.getElementById('adminLock').style.display='none';
+    document.getElementById('adminPanel').style.display='block';
+    initAdmin();
+  } else { toast('Wrong password','error'); }
+}
+async function loadOneDriveFolders() {
+  toast('Loading OneDrive folders...','loading');
+  document.getElementById('folderList').innerHTML = '<div style="color:#6b7280;font-size:13px;padding:8px">⏳ Loading...</div>';
+  document.getElementById('folderPicker').style.display='block';
+  try {
+    const data = await callClaude([{role:'user',content:
+      `List all folders in the root of my OneDrive. Return ONLY a JSON array of folder name strings. No markdown, no explanation. Example: ["Folder1","Folder2","Documents"]`
+    }], 'You are a Microsoft 365 assistant. Use OneDrive tools to list folders. Return only a JSON array of folder name strings.', 800);
+    const txt = extractTxt(data).replace(/```json|```/g,'').trim();
+    const folders = JSON.parse(txt);
+    document.getElementById('statusBar').classList.remove('show');
+    renderFolderList(folders, '', 'root');
+  } catch(e) {
+    document.getElementById('folderList').innerHTML = '<div style="color:#991b1b;font-size:13px;padding:8px">❌ Could not load folders — check OneDrive connection</div>';
+    toast('Could not load OneDrive folders','error');
+  }
+}
 
-updateBadge();
+function renderFolderList(folders, parentPath, level) {
+  const el = document.getElementById('folderList');
+  if(!folders.length){ el.innerHTML='<div style="color:#6b7280;font-size:13px;padding:8px">No folders found</div>'; return; }
+  el.innerHTML = folders.map(f => {
+    const fullPath = parentPath ? parentPath+'/'+f : f;
+    return `<div onclick="selectFolder('${fullPath}')" style="padding:10px 12px;border-bottom:1px solid #f1f5f9;cursor:pointer;font-size:13px;color:#1f2937;display:flex;align-items:center;gap:8px;background:#fff" onmouseover="this.style.background='#eff6ff'" onmouseout="this.style.background='#fff'">
+      <span>📁</span> <span>${f}</span>
+      <span style="margin-left:auto;color:#9ca3af;font-size:11px">Tap to select →</span>
+    </div>`;
+  }).join('');
+}
+
+function selectFolder(path) {
+  document.getElementById('selectedFolderDisplay').textContent = '📁 ' + path;
+  document.getElementById('selectedFolderDisplay').style.display = 'block';
+  document.getElementById('folderPicker').style.display = 'none';
+  document.getElementById('adminFolder').value = path;
+  toast('Folder selected: ' + path, 'success');
+}
+
+async function saveAdminConfig() {
+  const folder = document.getElementById('adminFolder').value.trim();
+  const file = document.getElementById('adminFile').value.trim();
+  if(!folder){ toast('Please select a OneDrive folder first','error'); return; }
+  if(!file){ toast('Enter Excel file name','error'); return; }
+  const fname = file.endsWith('.xlsx')?file:file+'.xlsx';
+  toast('Setting up OneDrive...','loading');
+  try {
+    const data = await callClaude([{role:'user',content:
+      `Create an Excel file named "${fname}" in the OneDrive folder "${folder}". Create the folder if it doesn't exist. The Excel must have these column headers in row 1: S.No, Captured By, Name, Company, Designation, Phone, Email, Requirements, Captured At. If the file already exists do not overwrite it. Reply only "DONE" when finished.`
+    }], 'You are a Microsoft 365 assistant. Use OneDrive tools to create files and folders.', 400);
+    const txt = extractTxt(data).toLowerCase();
+    cfg = {folder, file:fname};
+    localStorage.setItem(CFG_KEY, JSON.stringify(cfg));
+    document.getElementById('headerSub').textContent = '📁 '+folder+' / '+fname;
+    if(txt.includes('done')||txt.includes('created')||txt.includes('success')||txt.includes('exist')) {
+      document.getElementById('configStatus').innerHTML = `<div class="config-saved">✅ Excel ready on OneDrive!<br><strong>📁 ${folder} / ${fname}</strong></div>`;
+      toast('✅ OneDrive configured!','success');
+    } else {
+      document.getElementById('configStatus').innerHTML = `<div class="config-saved">Config saved. OneDrive response: ${txt.slice(0,60)}</div>`;
+      toast('Config saved','info');
+    }
+  } catch {
+    cfg = {folder, file:fname};
+    localStorage.setItem(CFG_KEY, JSON.stringify(cfg));
+    document.getElementById('configStatus').innerHTML = `<div class="config-saved">Config saved locally.</div>`;
+    toast('Saved locally — OneDrive unreachable','info');
+  }
+}
+
+// ── helpers ───────────────────────────────────────────────────────────────────
+function clearForm() {
+  ['fName','fCompany','fPhone','fEmail','fDesig','fReq'].forEach(id=>{
+    const el=document.getElementById(id); el.value=''; el.classList.remove('filled');
+  });
+  const img=document.getElementById('cardPreview'); img.src=''; img.style.display='none';
+  document.getElementById('interimTxt').textContent='';
+}
+function setField(id, val) {
+  if(val&&val.trim()){ const el=document.getElementById(id); el.value=val.trim(); el.classList.add('filled'); }
+}
+function updateBadge(n){ document.getElementById('badge').textContent=n; }
+function toB64(file){ return new Promise((res,rej)=>{ const r=new FileReader(); r.onload=()=>res(r.result); r.onerror=rej; r.readAsDataURL(file); }); }
+function extractTxt(data){ if(!data?.content) return ''; return data.content.filter(b=>b.type==='text').map(b=>b.text).join('').trim(); }
+
+async function callClaude(messages, system, max_tokens=500) {
+  const resp = await fetch('https://api.anthropic.com/v1/messages',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({
+      model:'claude-sonnet-4-20250514',
+      max_tokens, system, messages,
+      mcp_servers:[{type:'url',url:'https://microsoft365.mcp.claude.com/mcp',name:'m365'}]
+    })
+  });
+  return resp.json();
+}
+
+// init
+if(cfg.folder) document.getElementById('headerSub').textContent='📁 '+cfg.folder+' / '+cfg.file;
 </script>
 </body>
 </html>
