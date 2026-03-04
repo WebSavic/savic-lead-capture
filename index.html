@@ -1,0 +1,329 @@
+import { useState, useRef, useEffect } from "react";
+
+var COLS = [
+  {wch:5},{wch:28},{wch:20},{wch:26},{wch:14},{wch:26},{wch:36},{wch:40},{wch:22}
+];
+
+function loadXLSX(cb) {
+  if (window.XLSX) { cb(); return; }
+  var s = document.createElement("script");
+  s.src = "https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js";
+  s.onload = cb;
+  document.head.appendChild(s);
+}
+
+function readDb() {
+  try { return JSON.parse(localStorage.getItem("savic_db") || "[]"); }
+  catch(e) { return []; }
+}
+
+function emptyForm() {
+  return { name:"", company:"", phone:"", email:"", requirements:"", linkedin:"" };
+}
+
+var S = {
+  hdr:   { background:"linear-gradient(135deg,#1e3a8a,#3b82f6)", padding:"18px 16px 14px", color:"#fff", position:"sticky", top:0, zIndex:100, boxShadow:"0 2px 12px rgba(30,58,138,.3)" },
+  pg:    { padding:16, paddingBottom:50 },
+  card:  { background:"#fff", borderRadius:18, padding:"22px 18px", textAlign:"center", marginBottom:16, boxShadow:"0 2px 10px rgba(0,0,0,.07)" },
+  btn:   function(bg, fg) { return { width:"100%", border:"none", borderRadius:14, padding:15, fontSize:15, fontWeight:700, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", gap:8, marginBottom:12, background:bg, color:fg||"#fff" }; },
+  ibox:  { background:"#eff6ff", border:"1.5px solid #bfdbfe", borderRadius:12, padding:"12px 14px", fontSize:12, color:"#1e40af", marginBottom:12, lineHeight:1.6 },
+  fcard: function(act) { return { background:"#fff", borderRadius:14, padding:"13px 15px", marginBottom:12, boxShadow:"0 2px 8px rgba(0,0,0,.06)", border: act ? "2px solid #f59e0b" : "2px solid transparent" }; },
+  inp:   { width:"100%", border:"1.5px solid #e2e8f0", borderRadius:10, padding:"10px 12px", fontSize:15, outline:"none", fontFamily:"inherit", color:"#334155", background:"#fff" },
+  mic:   function(on) { return { border:"none", borderRadius:9, padding:"6px 11px", cursor:"pointer", fontSize:12, fontWeight:600, background: on ? "#f59e0b" : "#eff6ff", color: on ? "#fff" : "#3b82f6" }; },
+  evCard:{ background:"#fff", borderRadius:14, padding:"14px 16px", marginBottom:10, boxShadow:"0 2px 8px rgba(0,0,0,.06)" },
+  lcard: { background:"#fff", borderRadius:12, padding:"13px 14px", marginBottom:10, boxShadow:"0 2px 6px rgba(0,0,0,.06)", borderLeft:"4px solid #3b82f6" },
+  sec:   { fontSize:12, fontWeight:700, color:"#64748b", textTransform:"uppercase", letterSpacing:.5, marginBottom:10 },
+  del:   { background:"#fee2e2", border:"none", color:"#ef4444", borderRadius:7, padding:"6px 9px", fontSize:13, cursor:"pointer", flexShrink:0, marginLeft:6 }
+};
+
+export default function App() {
+  var [db, setDb]         = useState(readDb);
+  var [page, setPage]     = useState("home");
+  var [evIdx, setEvIdx]   = useState(null);
+  var [form, setForm]     = useState(emptyForm);
+  var [evName, setEvName] = useState("");
+  var [mic, setMic]       = useState(null);
+  var [saving, setSaving] = useState(false);
+  var [toast, setToast]   = useState(null);
+  var recogRef            = useRef(null);
+
+  useEffect(function() {
+    try { localStorage.setItem("savic_db", JSON.stringify(db)); } catch(e) {}
+  }, [db]);
+
+  function showToast(msg, err) {
+    setToast({ msg:msg, err:!!err });
+    setTimeout(function() { setToast(null); }, 2500);
+  }
+
+  function stopVoice() {
+    if (recogRef.current) { try { recogRef.current.stop(); } catch(e) {} recogRef.current = null; }
+    setMic(null);
+  }
+
+  function toggleVoice(field) {
+    if (mic === field) { stopVoice(); return; }
+    stopVoice();
+    var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SR) { showToast("Voice not supported in this browser", true); return; }
+    var r = new SR();
+    r.lang = "en-IN"; r.continuous = false; r.interimResults = false;
+    r.onstart  = function() { setMic(field); };
+    r.onresult = function(e) {
+      var txt = e.results[0][0].transcript;
+      setForm(function(f) { var u = Object.assign({}, f); u[field] = f[field] ? f[field] + " " + txt : txt; return u; });
+    };
+    r.onerror  = function() { showToast("Mic error. Check permissions.", true); stopVoice(); };
+    r.onend    = function() { setMic(null); };
+    recogRef.current = r;
+    r.start();
+  }
+
+  function goHome() { stopVoice(); setPage("home"); setEvIdx(null); setForm(emptyForm()); }
+  function goCapture(i) { stopVoice(); setEvIdx(i); setForm(emptyForm()); setPage("capture"); }
+  function goLeads(i)   { stopVoice(); setEvIdx(i); setPage("leads"); }
+
+  function createEvent() {
+    var n = evName.trim();
+    if (!n) { showToast("Enter event name!", true); return; }
+    for (var i = 0; i < db.length; i++) { if (db[i].name === n) { showToast("Event already exists!", true); return; } }
+    setDb(function(d) { return [{ name:n, leads:[], created:new Date().toLocaleString("en-IN") }].concat(d); });
+    setEvName("");
+    showToast("Event created!");
+  }
+
+  function deleteEvent(i) {
+    if (!window.confirm("Delete this event and all its leads?")) return;
+    setDb(function(d) { return d.filter(function(_,x){ return x!==i; }); });
+    showToast("Deleted");
+  }
+
+  function saveLead() {
+    if (!form.name.trim() || !form.company.trim()) { showToast("Name and Company required!", true); return; }
+    setSaving(true);
+    var lead = Object.assign({}, form, { datetime: new Date().toLocaleString("en-IN") });
+    setDb(function(d) {
+      return d.map(function(ev, i) {
+        if (i !== evIdx) return ev;
+        return Object.assign({}, ev, { leads: ev.leads.concat([lead]) });
+      });
+    });
+    showToast("Lead saved! ✅");
+    setTimeout(function() { setForm(emptyForm()); setSaving(false); }, 700);
+  }
+
+  function deleteLead(li) {
+    if (!window.confirm("Remove this lead?")) return;
+    setDb(function(d) {
+      return d.map(function(ev, i) {
+        if (i !== evIdx) return ev;
+        return Object.assign({}, ev, { leads: ev.leads.filter(function(_,x){ return x!==li; }) });
+      });
+    });
+  }
+
+  function buildRows(ev) {
+    return ev.leads.map(function(l, i) {
+      return { "Sr.No.":i+1, "Event":ev.name, "Full Name":l.name, "Company":l.company,
+        "Phone":l.phone, "Email":l.email, "Requirements":l.requirements,
+        "LinkedIn":l.linkedin, "Date & Time":l.datetime };
+    });
+  }
+
+  function exportOne(i) {
+    var ev = db[i];
+    if (!ev.leads.length) { showToast("No leads!", true); return; }
+    loadXLSX(function() {
+      var ws = window.XLSX.utils.json_to_sheet(buildRows(ev));
+      ws["!cols"] = COLS;
+      var wb = window.XLSX.utils.book_new();
+      window.XLSX.utils.book_append_sheet(wb, ws, "Leads");
+      window.XLSX.writeFile(wb, "SAVIC_" + ev.name.replace(/\s+/g,"_").substring(0,40) + "_" + new Date().toISOString().slice(0,10) + ".xlsx");
+      showToast("Exported! 📊");
+    });
+  }
+
+  function exportAll() {
+    var all = [];
+    db.forEach(function(ev) { buildRows(ev).forEach(function(r){ all.push(r); }); });
+    if (!all.length) { showToast("No leads!", true); return; }
+    loadXLSX(function() {
+      var wb = window.XLSX.utils.book_new();
+      var mws = window.XLSX.utils.json_to_sheet(all); mws["!cols"] = COLS;
+      window.XLSX.utils.book_append_sheet(wb, mws, "ALL LEADS");
+      db.forEach(function(ev) {
+        if (!ev.leads.length) return;
+        var ws = window.XLSX.utils.json_to_sheet(buildRows(ev)); ws["!cols"] = COLS;
+        window.XLSX.utils.book_append_sheet(wb, ws, ev.name.substring(0,31).replace(/[:\\\/\?\*\[\]]/g,""));
+      });
+      window.XLSX.writeFile(wb, "SAVIC_Master_" + new Date().toISOString().slice(0,10) + ".xlsx");
+      showToast("Master Excel exported! 📊");
+    });
+  }
+
+  function searchLinkedIn() {
+    if (!form.name.trim()) { showToast("Enter name first", true); return; }
+    var q = encodeURIComponent('"' + form.name + '"' + (form.company ? ' "' + form.company + '"' : '') + " site:linkedin.com/in");
+    window.open("https://www.google.com/search?q=" + q, "_blank");
+  }
+
+  var curEv = evIdx !== null ? db[evIdx] : null;
+
+  var CAPTURE_FIELDS = [
+    { key:"name",         label:"Full Name",    icon:"👤", type:"text",  req:true },
+    { key:"company",      label:"Company",      icon:"🏢", type:"text",  req:true },
+    { key:"phone",        label:"Phone",        icon:"📞", type:"tel",   req:false },
+    { key:"email",        label:"Email",        icon:"✉️", type:"email", req:false },
+    { key:"requirements", label:"Requirements", icon:"📋", type:"area",  req:false }
+  ];
+
+  return (
+    <div style={{ fontFamily:"'Segoe UI',sans-serif", background:"#f0f4ff", minHeight:"100vh", maxWidth:480, margin:"0 auto" }}>
+
+      {toast && (
+        <div style={{ position:"fixed", top:18, left:"50%", transform:"translateX(-50%)", background: toast.err ? "#ef4444" : "#22c55e", color:"#fff", padding:"9px 20px", borderRadius:30, fontWeight:600, zIndex:999, fontSize:13, boxShadow:"0 4px 18px rgba(0,0,0,.2)", whiteSpace:"nowrap" }}>
+          {toast.msg}
+        </div>
+      )}
+
+      {/* HEADER */}
+      <div style={S.hdr}>
+        <div style={{ display:"flex", alignItems:"center", gap:10 }}>
+          {page !== "home" && (
+            <button onClick={goHome} style={{ background:"rgba(255,255,255,.2)", border:"none", color:"#fff", width:34, height:34, borderRadius:"50%", fontSize:17, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center" }}>←</button>
+          )}
+          <div style={{ flex:1 }}>
+            <div style={{ fontSize:17, fontWeight:700 }}>SAVIC Lead Capture Pro</div>
+            <div style={{ fontSize:11, opacity:.8, marginTop:2 }}>
+              {page === "home" ? "SAP Workshop Lead Manager" : curEv ? curEv.name : ""}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* HOME */}
+      {page === "home" && (
+        <div style={S.pg}>
+          <div style={S.card}>
+            <div style={{ fontSize:48, marginBottom:6 }}>🎯</div>
+            <div style={{ fontSize:18, fontWeight:700, color:"#1e3a8a" }}>SAVIC Lead Capture Pro</div>
+            <div style={{ color:"#64748b", fontSize:13, marginTop:5 }}>Event-wise leads · Voice input · LinkedIn · Excel export</div>
+          </div>
+
+          <div style={S.sec}>Create New Event</div>
+          <div style={{ background:"#fff", borderRadius:14, padding:"14px 16px", marginBottom:16, boxShadow:"0 2px 8px rgba(0,0,0,.06)" }}>
+            <input style={S.inp} value={evName} onChange={function(e){ setEvName(e.target.value); }} placeholder="e.g. SAP S/4HANA Workshop Mumbai Mar 2026" onKeyDown={function(e){ if(e.key==="Enter") createEvent(); }}/>
+            <button style={Object.assign({}, S.btn("linear-gradient(135deg,#1e3a8a,#3b82f6)"), { marginTop:10, marginBottom:0 })} onClick={createEvent}>🚀 Create Event</button>
+          </div>
+
+          <div style={S.sec}>My Events ({db.length})</div>
+
+          {!db.length && (
+            <div style={{ textAlign:"center", padding:"40px 20px", color:"#94a3b8" }}>
+              <div style={{ fontSize:44 }}>📭</div>
+              <div style={{ fontWeight:600, marginTop:10 }}>No events yet</div>
+            </div>
+          )}
+
+          {db.map(function(ev, i) {
+            return (
+              <div key={i} style={S.evCard}>
+                <div style={{ fontWeight:700, color:"#1e3a8a", fontSize:15 }}>📅 {ev.name}</div>
+                <div style={{ fontSize:12, color:"#64748b", marginTop:3 }}>{ev.leads.length} lead{ev.leads.length!==1?"s":""} · {ev.created}</div>
+                <div style={{ display:"flex", gap:6, marginTop:10 }}>
+                  {[
+                    { label:"+ Add",    bg:"#eff6ff", fg:"#1e3a8a", fn:function(){ goCapture(i); } },
+                    { label:"👥 View",  bg:"#dcfce7", fg:"#16a34a", fn:function(){ goLeads(i); } },
+                    { label:"📊 Export",bg:"#f0fdf4", fg:"#16a34a", fn:function(){ exportOne(i); } },
+                    { label:"🗑",       bg:"#fee2e2", fg:"#ef4444", fn:function(){ deleteEvent(i); } }
+                  ].map(function(b, bi) {
+                    return <button key={bi} onClick={b.fn} style={{ flex:1, border:"none", borderRadius:9, padding:8, fontSize:12, fontWeight:600, cursor:"pointer", background:b.bg, color:b.fg }}>{b.label}</button>;
+                  })}
+                </div>
+              </div>
+            );
+          })}
+
+          {db.length > 0 && (
+            <button style={S.btn("#7c3aed")} onClick={exportAll}>📚 Export ALL Events – Master Excel</button>
+          )}
+        </div>
+      )}
+
+      {/* CAPTURE */}
+      {page === "capture" && (
+        <div style={S.pg}>
+          <div style={{ background: mic ? "#fef3c7" : "#eff6ff", border:"2px solid " + (mic ? "#f59e0b":"#bfdbfe"), borderRadius:12, padding:"10px 14px", marginBottom:14, fontSize:12, color: mic ? "#92400e":"#1e40af", display:"flex", alignItems:"center", gap:8 }}>
+            <span>{mic ? "🎙️" : "💡"}</span>
+            <span>{mic ? ("Listening for " + mic + "... speak now") : "Tap 🎤 next to any field for voice input"}</span>
+            {mic && <button onClick={stopVoice} style={{ marginLeft:"auto", background:"#ef4444", color:"#fff", border:"none", borderRadius:7, padding:"4px 10px", fontSize:11, cursor:"pointer" }}>Stop</button>}
+          </div>
+
+          {CAPTURE_FIELDS.map(function(f) {
+            return (
+              <div key={f.key} style={S.fcard(mic===f.key)}>
+                <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:7 }}>
+                  <span style={{ fontWeight:600, color:"#1e3a8a", fontSize:13 }}>{f.icon} {f.label}{f.req && <span style={{ color:"#ef4444" }}>*</span>}</span>
+                  <button style={S.mic(mic===f.key)} onClick={function(){ toggleVoice(f.key); }}>{mic===f.key ? "⏹ Stop" : "🎤"}</button>
+                </div>
+                {f.type === "area"
+                  ? <textarea rows={3} style={Object.assign({}, S.inp, { resize:"none" })} value={form[f.key]} onChange={function(e){ var v=e.target.value; setForm(function(p){ return Object.assign({},p,{ requirements:v }); }); }} placeholder="SAP module, budget, timeline..."/>
+                  : <input type={f.type} style={S.inp} value={form[f.key]} onChange={function(e){ var v=e.target.value,k=f.key; setForm(function(p){ var u=Object.assign({},p); u[k]=v; return u; }); }} placeholder={f.label}/>
+                }
+              </div>
+            );
+          })}
+
+          <div style={S.fcard(false)}>
+            <div style={{ fontWeight:600, color:"#1e3a8a", fontSize:13, marginBottom:8 }}>🔗 LinkedIn Profile</div>
+            <div style={{ display:"flex", gap:8 }}>
+              <input type="url" style={Object.assign({}, S.inp, { flex:1 })} value={form.linkedin} onChange={function(e){ var v=e.target.value; setForm(function(p){ return Object.assign({},p,{linkedin:v}); }); }} placeholder="Paste URL or search below"/>
+              <button onClick={searchLinkedIn} style={{ flexShrink:0, border:"none", borderRadius:9, padding:"8px 12px", fontSize:12, fontWeight:700, cursor:"pointer", background:"#0a66c2", color:"#fff" }}>🔍 Search</button>
+            </div>
+            <div style={{ fontSize:11, color:"#64748b", marginTop:5 }}>Opens Google → find profile → paste URL above</div>
+          </div>
+
+          <button onClick={saveLead} disabled={saving} style={{ background: saving ? "#22c55e" : "linear-gradient(135deg,#1e3a8a,#3b82f6)", color:"#fff", border:"none", borderRadius:14, padding:16, fontSize:16, fontWeight:700, cursor:"pointer", width:"100%", marginTop:6 }}>
+            {saving ? "✅ Saved!" : "💾 Save Lead"}
+          </button>
+        </div>
+      )}
+
+      {/* LEADS */}
+      {page === "leads" && curEv && (
+        <div style={S.pg}>
+          <div style={S.ibox}><b>{curEv.name}</b> · {curEv.leads.length} lead{curEv.leads.length!==1?"s":""} · {curEv.created}</div>
+          <button style={S.btn("linear-gradient(135deg,#1e3a8a,#3b82f6)")} onClick={function(){ goCapture(evIdx); }}>➕ Add Lead</button>
+          <button style={S.btn("#16a34a")} onClick={function(){ exportOne(evIdx); }}>📊 Export This Event to Excel</button>
+
+          {!curEv.leads.length && (
+            <div style={{ textAlign:"center", padding:"40px 20px", color:"#94a3b8" }}>
+              <div style={{ fontSize:44 }}>👥</div>
+              <div style={{ fontWeight:600, marginTop:10 }}>No leads yet</div>
+            </div>
+          )}
+
+          {curEv.leads.slice().reverse().map(function(l, ri) {
+            var realIdx = curEv.leads.length - 1 - ri;
+            return (
+              <div key={ri} style={S.lcard}>
+                <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start" }}>
+                  <div style={{ flex:1 }}>
+                    <div style={{ fontWeight:700, fontSize:14, color:"#1e3a8a" }}>👤 {l.name}</div>
+                    <div style={{ fontSize:12, color:"#475569", marginTop:3 }}>🏢 {l.company}</div>
+                    {l.phone && <div style={{ fontSize:12, color:"#475569", marginTop:2 }}>📞 {l.phone}</div>}
+                    {l.email && <div style={{ fontSize:12, color:"#475569", marginTop:2 }}>✉️ {l.email}</div>}
+                    {l.requirements && <div style={{ fontSize:12, color:"#64748b", marginTop:5, background:"#f8fafc", borderRadius:7, padding:"5px 9px" }}>📋 {l.requirements}</div>}
+                    {l.linkedin && <div style={{ fontSize:11, marginTop:4 }}><a href={l.linkedin} target="_blank" style={{ color:"#0a66c2" }}>🔗 LinkedIn</a></div>}
+                    <div style={{ fontSize:10, color:"#94a3b8", marginTop:4 }}>🕐 {l.datetime}</div>
+                  </div>
+                  <button onClick={function(){ deleteLead(realIdx); }} style={S.del}>🗑</button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
