@@ -398,6 +398,7 @@ async function loadMsUser(token) {
     });
     if (!r.ok) { sessionStorage.removeItem(TOKEN_KEY); return; }
     const u = await r.json();
+    console.log('MS User data:', u);
 
     // ── SECURITY: Only allow specific admin accounts ─────────────────────────
     const email = (u.mail || u.userPrincipalName || '').toLowerCase();
@@ -407,32 +408,28 @@ async function loadMsUser(token) {
       window.location.href = `https://login.microsoftonline.com/${TENANT}/oauth2/v2.0/logout`;
       return;
     }
-    // ─────────────────────────────────────────────────────────────────────────
 
     msToken = token;
-    msUser  = { name: u.displayName, email };
+    msUser  = {
+      name  : u.displayName || u.givenName || email.split('@')[0],
+      email
+    };
 
-    // Update header badge
+    // ── Update ALL name/email displays at once ───────────────────────────────
     document.getElementById('msUserName').textContent    = msUser.name;
     document.getElementById('msUserBadge').style.display = 'flex';
-
-    // Update OD status
-    document.getElementById('odUserEmail').textContent      = msUser.email;
+    document.getElementById('odUserEmail').textContent   = msUser.email;
     document.getElementById('odConnected').style.display    = 'block';
     document.getElementById('odDisconnected').style.display = 'none';
+    document.getElementById('adminUserLabel').textContent   = msUser.name + ' (' + msUser.email + ')';
 
-    // ── Auto-open admin panel immediately, skip password screen ──
-    showAdminPanel();
     updateSaveBtn();
     updateBadge();
-    toast('✅ Signed in as ' + msUser.email, 'ok');
-
-    // If we just returned from MS redirect, switch to admin tab automatically
-    if (window.location.hash === '' && sessionStorage.getItem('savic_redirect_tab') === 'admin') {
-      sessionStorage.removeItem('savic_redirect_tab');
-      showTab('admin');
-    }
-  } catch(e) { sessionStorage.removeItem(TOKEN_KEY); }
+    toast('✅ Signed in as ' + msUser.name, 'ok');
+  } catch(e) {
+    console.error('loadMsUser error:', e);
+    sessionStorage.removeItem(TOKEN_KEY);
+  }
 }
 
 function msSignIn() {
