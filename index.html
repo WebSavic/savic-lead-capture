@@ -17,31 +17,30 @@
   .container{padding:16px;max-width:480px;margin:0 auto}
   .card{background:#fff;border-radius:12px;padding:16px;box-shadow:0 2px 8px rgba(0,0,0,.08);margin-bottom:12px}
 
-  /* BIG VOICE BUTTON */
-  .voice-section{text-align:center;padding:8px 0 4px}
-  .voice-label{font-size:13px;color:#6b7280;margin-bottom:12px}
-  .big-mic{width:90px;height:90px;border-radius:50%;background:linear-gradient(135deg,#1a56c4,#0a2d6b);border:none;font-size:36px;cursor:pointer;margin:0 auto;display:flex;align-items:center;justify-content:center;box-shadow:0 6px 20px rgba(26,86,196,.35);transition:.2s;user-select:none;-webkit-user-select:none}
-  .big-mic.recording{background:linear-gradient(135deg,#ef4444,#b91c1c);box-shadow:0 0 0 10px rgba(239,68,68,.15),0 6px 20px rgba(239,68,68,.4);animation:ripple 1.2s infinite}
-  .big-mic.loading{background:linear-gradient(135deg,#f59e0b,#d97706);box-shadow:0 6px 20px rgba(245,158,11,.35);animation:spin 1.5s linear infinite}
-  @keyframes ripple{0%{box-shadow:0 0 0 0 rgba(239,68,68,.4),0 6px 20px rgba(239,68,68,.4)}70%{box-shadow:0 0 0 16px rgba(239,68,68,0),0 6px 20px rgba(239,68,68,.4)}100%{box-shadow:0 0 0 0 rgba(239,68,68,0),0 6px 20px rgba(239,68,68,.4)}}
-  @keyframes spin{from{filter:hue-rotate(0deg)}to{filter:hue-rotate(360deg)}}
-  .mic-status{font-size:13px;font-weight:600;color:#374151;margin-top:12px;min-height:20px}
-  .mic-timer{font-size:22px;font-weight:700;color:#ef4444;margin-top:4px;min-height:30px}
-  .waveform{display:flex;align-items:center;justify-content:center;gap:3px;height:28px;margin:8px 0}
-  .wb{width:4px;border-radius:2px;background:#1a56c4;transition:height .12s}
-  .hint-box{background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:12px;margin-top:12px;font-size:12px;color:#1e40af;line-height:1.6}
-  .hint-box strong{display:block;margin-bottom:4px;font-size:13px}
+  .voice-card{background:linear-gradient(135deg,#eff6ff,#dbeafe);border:2px solid #bfdbfe;border-radius:12px;padding:18px;margin-bottom:12px;text-align:center}
+  .voice-title{font-size:14px;font-weight:700;color:#1e40af;margin-bottom:4px}
+  .voice-sub{font-size:12px;color:#3b82f6;margin-bottom:16px}
+  .big-mic{width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,#1a56c4,#0a2d6b);border:none;font-size:32px;cursor:pointer;margin:0 auto 12px;display:flex;align-items:center;justify-content:center;box-shadow:0 6px 20px rgba(26,86,196,.35);transition:.2s;user-select:none;-webkit-user-select:none}
+  .big-mic.recording{background:linear-gradient(135deg,#ef4444,#b91c1c);box-shadow:0 0 0 0 rgba(239,68,68,.4);animation:ripple 1.2s infinite}
+  .big-mic.processing{background:linear-gradient(135deg,#f59e0b,#d97706);animation:none}
+  @keyframes ripple{0%{box-shadow:0 0 0 0 rgba(239,68,68,.5)}70%{box-shadow:0 0 0 18px rgba(239,68,68,0)}100%{box-shadow:0 0 0 0 rgba(239,68,68,0)}}
+  .mic-status{font-size:13px;font-weight:600;color:#1e40af;min-height:20px}
+  .mic-timer{font-size:20px;font-weight:700;color:#ef4444;min-height:28px;margin-top:2px}
+  .interim{font-size:12px;color:#6b7280;font-style:italic;min-height:18px;margin-top:6px;padding:0 10px}
 
-  .divider{display:flex;align-items:center;gap:10px;margin:14px 0;color:#9ca3af;font-size:12px}
-  .divider::before,.divider::after{content:'';flex:1;height:1px;background:#e5e7eb}
+  .waveform{display:flex;align-items:center;justify-content:center;gap:3px;height:24px;margin:8px 0}
+  .wb{width:4px;border-radius:2px;background:#1a56c4;transition:height .1s}
+
+  .step-hint{background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:10px 12px;font-size:12px;color:#166534;margin-top:10px;text-align:left;line-height:1.7}
+  .step-hint strong{display:block;color:#14532d;margin-bottom:3px}
 
   .field-row{margin-bottom:14px}
   label{display:block;font-size:12px;font-weight:600;color:#374151;margin-bottom:5px;text-transform:uppercase;letter-spacing:.4px}
+  .input-wrap{position:relative}
   input,textarea{width:100%;border:1.5px solid #d1d5db;border-radius:8px;padding:10px 12px;font-size:14px;color:#1f2937;outline:none;transition:.2s}
   input:focus,textarea:focus{border-color:#1a56c4;box-shadow:0 0 0 3px rgba(26,86,196,.1)}
-  input.filled{border-color:#10b981;background:#f0fdf4}
+  input.filled,textarea.filled{border-color:#10b981;background:#f0fdf4}
   textarea{resize:vertical;min-height:70px}
-  textarea.filled{border-color:#10b981;background:#f0fdf4}
 
   .btn{width:100%;padding:13px;border:none;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;transition:.2s}
   .btn-primary{background:linear-gradient(135deg,#1a56c4,#0a2d6b);color:#fff}
@@ -65,6 +64,8 @@
   .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#1f2937;color:#fff;padding:10px 20px;border-radius:20px;font-size:13px;z-index:999;opacity:0;transition:.3s;pointer-events:none;max-width:90vw;text-align:center}
   .toast.show{opacity:1}
   .badge{display:inline-block;background:#dcfce7;color:#166534;font-size:11px;padding:2px 8px;border-radius:10px;font-weight:600;margin-left:6px}
+  .divider{display:flex;align-items:center;gap:10px;margin:4px 0 14px;color:#9ca3af;font-size:12px}
+  .divider::before,.divider::after{content:'';flex:1;height:1px;background:#e5e7eb}
 </style>
 </head>
 <body>
@@ -81,35 +82,33 @@
 
 <div id="capturePane" class="container">
 
-  <div class="card">
-    <div class="voice-section">
-      <div class="voice-label">Hand the phone to client — tap mic and speak</div>
+  <div class="voice-card">
+    <div class="voice-title">🎙 One-Tap Voice Fill</div>
+    <div class="voice-sub">Client speaks once — all fields fill automatically</div>
 
-      <button class="big-mic" id="bigMic" onclick="toggleRecord()">🎙</button>
+    <button class="big-mic" id="bigMic" onclick="toggleVoice()">🎙</button>
 
-      <div class="waveform" id="waveform">
-        <div class="wb" id="wb1" style="height:5px"></div>
-        <div class="wb" id="wb2" style="height:9px"></div>
-        <div class="wb" id="wb3" style="height:5px"></div>
-        <div class="wb" id="wb4" style="height:14px"></div>
-        <div class="wb" id="wb5" style="height:5px"></div>
-        <div class="wb" id="wb6" style="height:9px"></div>
-        <div class="wb" id="wb7" style="height:5px"></div>
-        <div class="wb" id="wb8" style="height:14px"></div>
-        <div class="wb" id="wb9" style="height:5px"></div>
-      </div>
+    <div class="waveform" id="waveform">
+      <div class="wb" id="wb1" style="height:5px"></div>
+      <div class="wb" id="wb2" style="height:9px"></div>
+      <div class="wb" id="wb3" style="height:5px"></div>
+      <div class="wb" id="wb4" style="height:14px"></div>
+      <div class="wb" id="wb5" style="height:5px"></div>
+      <div class="wb" id="wb6" style="height:9px"></div>
+      <div class="wb" id="wb7" style="height:5px"></div>
+    </div>
 
-      <div class="mic-timer" id="micTimer"></div>
-      <div class="mic-status" id="micStatus">Tap mic to start</div>
+    <div class="mic-status" id="micStatus">Tap mic to start</div>
+    <div class="mic-timer" id="micTimer"></div>
+    <div class="interim" id="interimText"></div>
 
-      <div class="hint-box">
-        <strong>💬 Client should say:</strong>
-        "My name is Rajesh Kumar, my company is Tata Consultancy, phone number is 9876543210, email is rajesh@tcs.com, I need SAP S/4HANA implementation for 500 users."
-      </div>
+    <div class="step-hint">
+      <strong>📢 Client should say:</strong>
+      "My name is Rajesh Kumar, company is Tata Consultancy, phone 9876543210, email rajesh@tcs.com, I need SAP S/4HANA for 500 users."
     </div>
   </div>
 
-  <div class="divider">or fill manually</div>
+  <div class="divider">or fill manually below</div>
 
   <div class="card">
     <div class="field-row">
@@ -142,6 +141,7 @@
   <div class="btn-group">
     <button class="btn btn-secondary" onclick="clearForm()">🗑 Clear Form</button>
   </div>
+
 </div>
 
 <div id="leadsPane" class="container" style="display:none">
@@ -159,35 +159,29 @@
 <div class="toast" id="toast"></div>
 
 <script>
-let leads = JSON.parse(localStorage.getItem('savic_leads3') || '[]');
-let mediaRecorder = null, audioChunks = [], recInterval = null, recSecs = 0, waveInterval = null;
+let leads = JSON.parse(localStorage.getItem('savic_leads4') || '[]');
+let sr = null, isRecording = false, recInterval = null, recSecs = 0, waveInt = null;
+let fullTranscript = '';
 
-function switchTab(t){
-  document.getElementById('capturePane').style.display = t==='capture'?'block':'none';
-  document.getElementById('leadsPane').style.display = t==='leads'?'block':'none';
-  document.getElementById('tabCapture').classList.toggle('active', t==='capture');
-  document.getElementById('tabLeads').classList.toggle('active', t==='leads');
-  if(t==='leads') renderLeads();
+const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+function toggleVoice(){
+  if(isRecording){ stopVoice(true); }
+  else { startVoice(); }
 }
 
-async function toggleRecord(){
-  if(mediaRecorder && mediaRecorder.state==='recording'){
-    stopRecording();
-  } else {
-    await startRecording();
-  }
-}
+function startVoice(){
+  if(!SR){ showToast('Voice not supported — please use Chrome on Android'); return; }
+  fullTranscript = '';
+  sr = new SR();
+  sr.lang = 'en-IN';
+  sr.continuous = true;
+  sr.interimResults = true;
 
-async function startRecording(){
-  try {
-    const stream = await navigator.mediaDevices.getUserMedia({audio:true});
-    audioChunks = [];
-    mediaRecorder = new MediaRecorder(stream);
-    mediaRecorder.ondataavailable = e => { if(e.data.size>0) audioChunks.push(e.data); };
-    mediaRecorder.onstop = () => { stream.getTracks().forEach(t=>t.stop()); processAudio(); };
-    mediaRecorder.start(100);
-    recSecs = 0;
+  sr.onstart = () => {
+    isRecording = true;
     setMicState('recording');
+    recSecs = 0;
     recInterval = setInterval(()=>{
       recSecs++;
       const m = String(Math.floor(recSecs/60)).padStart(2,'0');
@@ -195,60 +189,84 @@ async function startRecording(){
       document.getElementById('micTimer').textContent = m+':'+s;
     },1000);
     startWave();
-  } catch(e) {
-    showToast('❌ Mic access denied — allow microphone in browser settings');
+  };
+
+  sr.onresult = (e) => {
+    let interim = '';
+    for(let i = e.resultIndex; i < e.results.length; i++){
+      if(e.results[i].isFinal){
+        fullTranscript += e.results[i][0].transcript + ' ';
+      } else {
+        interim += e.results[i][0].transcript;
+      }
+    }
+    document.getElementById('interimText').textContent = interim || fullTranscript.slice(-60);
+  };
+
+  sr.onerror = (e) => {
+    if(e.error === 'not-allowed'){
+      showToast('❌ Mic blocked — allow microphone access in browser settings');
+    } else {
+      showToast('Mic error: ' + e.error + ' — try again');
+    }
+    stopVoice(false);
+  };
+
+  sr.onend = () => {
+    if(isRecording){ stopVoice(true); }
+  };
+
+  try { sr.start(); } catch(e){ showToast('Could not start mic — try again'); }
+}
+
+function stopVoice(process){
+  isRecording = false;
+  clearInterval(recInterval); recInterval = null;
+  clearInterval(waveInt); waveInt = null;
+  resetWave();
+  try{ if(sr) sr.stop(); } catch(e){}
+  if(process && fullTranscript.trim()){
+    setMicState('processing');
+    parseWithAI(fullTranscript.trim());
+  } else {
+    setMicState('idle');
+    document.getElementById('interimText').textContent = '';
   }
 }
 
-function stopRecording(){
-  clearInterval(recInterval); recInterval=null;
-  clearInterval(waveInterval); waveInterval=null;
-  resetWave();
-  if(mediaRecorder && mediaRecorder.state==='recording') mediaRecorder.stop();
-  setMicState('loading');
-}
-
-async function processAudio(){
+async function parseWithAI(transcript){
   try {
-    const blob = new Blob(audioChunks, {type:'audio/webm'});
-    const base64 = await blobToBase64(blob);
     const resp = await fetch('https://api.anthropic.com/v1/messages',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
       body: JSON.stringify({
         model:'claude-sonnet-4-20250514',
-        max_tokens:400,
-        system:`You extract lead information from a spoken introduction and return ONLY a JSON object with these keys: name, company, phone, email, designation, requirements. If a field is not mentioned, use empty string "". For phone, extract digits only. Do not include any explanation, markdown, or extra text — only the raw JSON object.`,
-        messages:[{
-          role:'user',
-          content:[
-            {type:'text', text:'Extract lead info from this audio and return only JSON.'},
-            {type:'document', source:{type:'base64', media_type:'audio/webm', data: base64.split(',')[1]}}
-          ]
-        }]
+        max_tokens:300,
+        system:`Extract lead info from text and return ONLY a raw JSON object (no markdown, no explanation) with keys: name, company, phone, email, designation, requirements. Use empty string "" for missing fields. For phone extract digits only.`,
+        messages:[{role:'user', content: transcript}]
       })
     });
     const data = await resp.json();
     let txt = '';
     if(data.content) txt = data.content.filter(b=>b.type==='text').map(b=>b.text).join('').trim();
-    // Parse JSON
     const cleaned = txt.replace(/```json|```/g,'').trim();
-    let parsed;
-    try{ parsed = JSON.parse(cleaned); } catch(e){ throw new Error('Parse failed'); }
+    const parsed = JSON.parse(cleaned);
     fillFields(parsed);
     setMicState('idle');
+    document.getElementById('interimText').textContent = '';
     showToast('✅ Fields filled! Review and save.');
-  } catch(e) {
+  } catch(e){
+    // fallback: put raw transcript into requirements
+    document.getElementById('fReq').value = transcript;
+    document.getElementById('fReq').classList.add('filled');
     setMicState('idle');
-    showToast('Could not auto-fill — please type manually');
+    document.getElementById('interimText').textContent = '';
+    showToast('⚠️ Auto-fill partial — transcript saved in Notes. Fill other fields manually.');
   }
 }
 
 function fillFields(d){
-  const set = (id, val) => {
-    const el = document.getElementById(id);
-    if(val){ el.value = val; el.classList.add('filled'); }
-  };
+  const set = (id,val) => { if(val && val.trim()){ const el=document.getElementById(id); el.value=val.trim(); el.classList.add('filled'); }};
   set('fName', d.name);
   set('fCompany', d.company);
   set('fPhone', d.phone);
@@ -264,33 +282,26 @@ function setMicState(state){
   btn.className = 'big-mic';
   if(state==='recording'){
     btn.classList.add('recording');
-    btn.textContent = '⏹';
-    status.textContent = 'Recording... tap to stop';
-  } else if(state==='loading'){
-    btn.classList.add('loading');
-    btn.textContent = '⏳';
-    status.textContent = 'AI is filling the fields...';
-    timer.textContent = '';
+    btn.textContent='⏹';
+    status.textContent='Recording... tap ⏹ to stop';
+  } else if(state==='processing'){
+    btn.classList.add('processing');
+    btn.textContent='⏳';
+    status.textContent='Filling fields with AI...';
+    timer.textContent='';
   } else {
-    btn.textContent = '🎙';
-    status.textContent = 'Tap mic to start';
-    timer.textContent = '';
+    btn.textContent='🎙';
+    status.textContent='Tap mic to start';
+    timer.textContent='';
   }
 }
 
 function startWave(){
-  const ids = ['wb1','wb2','wb3','wb4','wb5','wb6','wb7','wb8','wb9'];
-  waveInterval = setInterval(()=>{
-    ids.forEach(id=>{ document.getElementById(id).style.height=(4+Math.random()*22)+'px'; });
-  },120);
+  const ids=['wb1','wb2','wb3','wb4','wb5','wb6','wb7'];
+  waveInt=setInterval(()=>{ ids.forEach(id=>{ document.getElementById(id).style.height=(4+Math.random()*22)+'px'; }); },120);
 }
 function resetWave(){
-  ['wb1','wb2','wb3','wb4','wb5','wb6','wb7','wb8','wb9'].forEach(id=>{
-    const el=document.getElementById(id); if(el) el.style.height='5px';
-  });
-}
-function blobToBase64(blob){
-  return new Promise((res,rej)=>{ const r=new FileReader(); r.onload=()=>res(r.result); r.onerror=rej; r.readAsDataURL(blob); });
+  ['wb1','wb2','wb3','wb4','wb5','wb6','wb7'].forEach(id=>{ const el=document.getElementById(id); if(el) el.style.height='5px'; });
 }
 
 function saveLead(){
@@ -312,10 +323,10 @@ function saveLead(){
 }
 
 function clearForm(){
-  ['fName','fCompany','fPhone','fEmail','fDesig','fReq'].forEach(id=>{
-    const el=document.getElementById(id); el.value=''; el.classList.remove('filled');
-  });
+  ['fName','fCompany','fPhone','fEmail','fDesig','fReq'].forEach(id=>{ const el=document.getElementById(id); el.value=''; el.classList.remove('filled'); });
   setMicState('idle');
+  document.getElementById('interimText').textContent='';
+  fullTranscript='';
 }
 
 function deleteLead(id){ leads=leads.filter(l=>l.id!==id); save(); updateBadge(); renderLeads(); showToast('Lead deleted'); }
@@ -347,9 +358,17 @@ function exportExcel(){
   showToast('✅ Excel downloaded!');
 }
 
-function save(){ localStorage.setItem('savic_leads3',JSON.stringify(leads)); }
+function switchTab(t){
+  document.getElementById('capturePane').style.display=t==='capture'?'block':'none';
+  document.getElementById('leadsPane').style.display=t==='leads'?'block':'none';
+  document.getElementById('tabCapture').classList.toggle('active',t==='capture');
+  document.getElementById('tabLeads').classList.toggle('active',t==='leads');
+  if(t==='leads') renderLeads();
+}
+
+function save(){ localStorage.setItem('savic_leads4',JSON.stringify(leads)); }
 function updateBadge(){ document.getElementById('countBadge').textContent=leads.length; document.getElementById('totalCount').textContent=leads.length; }
-function showToast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),3000); }
+function showToast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),3200); }
 
 updateBadge();
 </script>
