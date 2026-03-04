@@ -10,8 +10,8 @@ body{font-family:Segoe UI,sans-serif;background:#f0f4ff;max-width:480px;margin:0
 .hdr{background:linear-gradient(135deg,#1e3a8a,#3b82f6);padding:16px;color:#fff;position:sticky;top:0;z-index:99}
 .hdr-row{display:flex;align-items:center;gap:10px}
 .back{width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,.2);border:none;color:#fff;font-size:18px;cursor:pointer;flex-shrink:0}
+.hidden{display:none!important}
 .pg{padding:16px 16px 60px}
-.hidden{display:none}
 .card{background:#fff;border-radius:16px;padding:20px;text-align:center;margin-bottom:16px;box-shadow:0 2px 8px rgba(0,0,0,.08)}
 .card h2{color:#1e3a8a;font-size:18px;margin-top:8px}
 .card p{color:#64748b;font-size:13px;margin-top:4px}
@@ -31,12 +31,15 @@ textarea{resize:none}
 .vbanner.on{background:#fef3c7;border-color:#f59e0b;color:#92400e}
 .lirow{display:flex;gap:8px}
 .libtn{border:none;border-radius:8px;padding:8px 12px;font-size:12px;font-weight:700;cursor:pointer;background:#0a66c2;color:#fff;flex-shrink:0}
-.savebtn{width:100%;border:none;border-radius:12px;padding:15px;font-size:16px;font-weight:700;cursor:pointer;background:linear-gradient(135deg,#1e3a8a,#3b82f6);color:#fff;margin-top:8px}
+.savebtn{width:100%;border:none;border-radius:12px;padding:15px;font-size:16px;font-weight:700;cursor:pointer;background:linear-gradient(135deg,#1e3a8a,#3b82f6);color:#fff;margin-top:8px;display:flex;align-items:center;justify-content:center;gap:8px}
 .savebtn.done{background:#22c55e}
+.savebtn:disabled{opacity:.7;cursor:not-allowed}
 .btn{width:100%;border:none;border-radius:12px;padding:14px;font-size:15px;font-weight:700;cursor:pointer;margin-bottom:11px;display:flex;align-items:center;justify-content:center;gap:8px}
 .btn-blue{background:linear-gradient(135deg,#1e3a8a,#3b82f6);color:#fff}
 .btn-green{background:#16a34a;color:#fff}
 .btn-purple{background:#7c3aed;color:#fff}
+.btn-ms{background:#fff;color:#1e3a8a;border:2px solid #e2e8f0}
+.btn:disabled{opacity:.6;cursor:not-allowed}
 .evcard{background:#fff;border-radius:12px;padding:13px 14px;margin-bottom:10px;box-shadow:0 1px 6px rgba(0,0,0,.07)}
 .evname{font-weight:700;color:#1e3a8a;font-size:14px}
 .evmeta{font-size:12px;color:#64748b;margin-top:3px}
@@ -55,14 +58,19 @@ textarea{resize:none}
 .delbtn{background:#fee2e2;border:none;color:#ef4444;border-radius:7px;padding:5px 8px;font-size:12px;cursor:pointer;flex-shrink:0;margin-left:6px}
 .infobox{background:#eff6ff;border:1.5px solid #bfdbfe;border-radius:10px;padding:11px 13px;font-size:12px;color:#1e40af;margin-bottom:12px}
 .empty{text-align:center;padding:40px 16px;color:#94a3b8}
-.toast{position:fixed;top:16px;left:50%;transform:translateX(-50%);padding:9px 20px;border-radius:30px;font-weight:600;font-size:13px;color:#fff;box-shadow:0 3px 14px rgba(0,0,0,.2);z-index:999;display:none;white-space:nowrap}
-.tok{background:#22c55e}.terr{background:#ef4444}
+.toast{position:fixed;top:16px;left:50%;transform:translateX(-50%);padding:9px 20px;border-radius:30px;font-weight:600;font-size:13px;color:#fff;box-shadow:0 3px 14px rgba(0,0,0,.2);z-index:999;display:none;white-space:nowrap;max-width:90vw;text-align:center}
+.tok{background:#22c55e}.terr{background:#ef4444}.tinfo{background:#3b82f6}
 .sec{font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.6px;margin-bottom:9px}
 .badge{background:#3b82f6;color:#fff;border-radius:20px;padding:1px 8px;font-size:11px;margin-left:5px}
+.sync-ok{color:#16a34a;font-size:10px}
+.sync-pending{color:#f59e0b;font-size:10px}
+.sync-err{color:#ef4444;font-size:10px}
+.spin{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:sp .7s linear infinite;vertical-align:middle;margin-right:4px}
+@keyframes sp{to{transform:rotate(360deg)}}
+.user-chip{background:rgba(255,255,255,.2);border-radius:20px;padding:3px 10px;font-size:11px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:140px}
 </style>
 </head>
 <body>
-
 <div class="hdr">
   <div class="hdr-row">
     <button class="back hidden" id="backBtn" onclick="goBack()">&#8592;</button>
@@ -70,23 +78,39 @@ textarea{resize:none}
       <div style="font-size:16px;font-weight:700">SAVIC Lead Capture</div>
       <div id="hdrSub" style="font-size:11px;opacity:.8;margin-top:1px">SAP Workshop Lead Manager</div>
     </div>
+    <div id="userChip"></div>
   </div>
 </div>
-
 <div id="toast" class="toast"></div>
 
-<!-- HOME -->
-<div id="pgHome" class="pg">
+<!-- LOGIN -->
+<div id="pgLogin" class="pg">
   <div class="card">
     <div style="font-size:44px">&#127919;</div>
     <h2>SAVIC Lead Capture Pro</h2>
-    <p>Event-wise leads &bull; Voice input &bull; LinkedIn &bull; Excel export</p>
+    <p>Sign in with your SAVIC Microsoft account to sync leads to OneDrive</p>
+  </div>
+  <button class="btn btn-ms" onclick="msLogin()" id="loginBtn">
+    <svg width="20" height="20" viewBox="0 0 21 21"><rect x="1" y="1" width="9" height="9" fill="#f25022"/><rect x="11" y="1" width="9" height="9" fill="#7fba00"/><rect x="1" y="11" width="9" height="9" fill="#00a4ef"/><rect x="11" y="11" width="9" height="9" fill="#ffb900"/></svg>
+    Sign in with Microsoft 365
+  </button>
+  <div class="box" style="font-size:12px;color:#64748b;text-align:center">
+    Only <b>SAVIC Technologies</b> accounts can sign in.<br/>Leads will be saved to your OneDrive automatically.
+  </div>
+</div>
+
+<!-- HOME -->
+<div id="pgHome" class="pg hidden">
+  <div class="card">
+    <div style="font-size:44px">&#127919;</div>
+    <h2>SAVIC Lead Capture Pro</h2>
+    <p>Event-wise leads &bull; Voice input &bull; LinkedIn &bull; OneDrive Excel sync</p>
   </div>
   <div class="sec">Create New Event</div>
   <div class="box">
     <label>Event Name</label>
-    <input type="text" id="inpEv" placeholder="e.g. SAP Workshop Mumbai Mar 2026"/>
-    <button class="btn btn-blue" style="margin-top:10px;margin-bottom:0" onclick="createEvent()">&#128640; Create Event</button>
+    <input type="text" id="inpEv" placeholder="e.g. SAP Workshop Mumbai Mar 2026" onkeydown="if(event.key==='Enter')createEvent()"/>
+    <button class="btn btn-blue" id="createEvBtn" style="margin-top:10px;margin-bottom:0" onclick="createEvent()">&#128640; Create Event</button>
   </div>
   <div class="sec">My Events <span class="badge" id="evBadge">0</span></div>
   <div id="evList"></div>
@@ -140,28 +164,39 @@ textarea{resize:none}
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://alcdn.msauth.net/browser/2.38.3/js/msal-browser.min.js"></script>
 <script>
+var CLIENT_ID = '5680a642-9456-40ae-8ce9-9caf0cf4eea8';
+var TENANT_ID = '8a50a18b-c135-4d02-b21a-bd6b114c6755';
+var SCOPES    = ['Files.ReadWrite', 'User.Read'];
+var GRAPH     = 'https://graph.microsoft.com/v1.0';
+
+var msalApp = null;
+var account = null;
 var db = [];
 var ci = null;
 var sr = null;
 var af = null;
 
-function ld() { try { db = JSON.parse(localStorage.getItem('sv5') || '[]'); } catch(e) { db = []; } }
-function sd() { localStorage.setItem('sv5', JSON.stringify(db)); }
+function ld() { try { db = JSON.parse(localStorage.getItem('sv6') || '[]'); } catch(e) { db = []; } }
+function sd() { localStorage.setItem('sv6', JSON.stringify(db)); }
 function x(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
-function toast(m, e) {
-  var t = document.getElementById('toast');
-  t.textContent = m; t.className = 'toast ' + (e ? 'terr' : 'tok');
-  t.style.display = 'block';
-  clearTimeout(t.tid);
-  t.tid = setTimeout(function(){ t.style.display='none'; }, 2500);
+function toast(m, t) {
+  var el = document.getElementById('toast');
+  el.textContent = m;
+  el.className = 'toast ' + (t || 'tok');
+  el.style.display = 'block';
+  clearTimeout(el.tid);
+  el.tid = setTimeout(function(){ el.style.display='none'; }, 3000);
 }
 
 function show(id) {
-  ['pgHome','pgCapture','pgLeads'].forEach(function(p){ document.getElementById(p).classList.add('hidden'); });
+  ['pgLogin','pgHome','pgCapture','pgLeads'].forEach(function(p){
+    document.getElementById(p).classList.add('hidden');
+  });
   document.getElementById(id).classList.remove('hidden');
-  document.getElementById('backBtn').classList[id==='pgHome'?'add':'remove']('hidden');
+  document.getElementById('backBtn').classList[id==='pgHome'||id==='pgLogin'?'add':'remove']('hidden');
 }
 
 function goBack() {
@@ -175,25 +210,131 @@ function goBack() {
   }
 }
 
+window.onload = function() {
+  ld();
+  msalApp = new msal.PublicClientApplication({
+    auth: {
+      clientId: CLIENT_ID,
+      authority: 'https://login.microsoftonline.com/' + TENANT_ID,
+      redirectUri: window.location.origin
+    },
+    cache: { cacheLocation: 'localStorage', storeAuthStateInCookie: true }
+  });
+  msalApp.handleRedirectPromise().then(function(res) {
+    if (res) { account = res.account; onSignedIn(); return; }
+    var accts = msalApp.getAllAccounts();
+    if (accts.length) { account = accts[0]; onSignedIn(); }
+    else { show('pgLogin'); }
+  }, function() { show('pgLogin'); });
+};
+
+function msLogin() {
+  document.getElementById('loginBtn').innerHTML = '<span class="spin"></span>Signing in...';
+  msalApp.loginRedirect({ scopes: SCOPES });
+}
+
+function onSignedIn() {
+  var name = account.name || account.username;
+  document.getElementById('userChip').innerHTML = '<div class="user-chip">&#128100; ' + x(name.split(' ')[0]) + '</div>';
+  document.getElementById('hdrSub').textContent = 'Signed in · OneDrive Sync ON';
+  renderEvents();
+  show('pgHome');
+}
+
+function getToken() {
+  return msalApp.acquireTokenSilent({ scopes: SCOPES, account: account }).then(function(r) {
+    return r.accessToken;
+  }, function() {
+    return msalApp.acquireTokenPopup({ scopes: SCOPES }).then(function(r) {
+      return r.accessToken;
+    });
+  });
+}
+
+function graphCall(method, path, body, token) {
+  var opts = {
+    method: method,
+    headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }
+  };
+  if (body) opts.body = JSON.stringify(body);
+  return fetch(GRAPH + path, opts).then(function(r) {
+    if (!r.ok) return r.text().then(function(e) { throw new Error(e); });
+    var ct = r.headers.get('content-type') || '';
+    return ct.indexOf('json') >= 0 ? r.json() : r.text();
+  });
+}
+
+function createExcelOnOneDrive(evName, token) {
+  var headers = [['Sr.No.','Event','Full Name','Company','Phone','Email','Requirements','LinkedIn','Date & Time']];
+  var ws = XLSX.utils.aoa_to_sheet(headers);
+  ws['!cols'] = [{wch:5},{wch:28},{wch:20},{wch:26},{wch:14},{wch:26},{wch:36},{wch:40},{wch:22}];
+  var wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Leads');
+  var arr = XLSX.write(wb, { type: 'array', bookType: 'xlsx' });
+  var blob = new Blob([arr], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+  var safe = evName.replace(/[^a-zA-Z0-9\s-]/g,'').trim().replace(/\s+/g,'_').substring(0,50);
+  var fname = 'SAVIC_' + safe + '_' + new Date().toISOString().slice(0,10) + '.xlsx';
+  var path = '/me/drive/root:/SAVIC Leads/' + encodeURIComponent(fname) + ':/content';
+  return fetch(GRAPH + path, {
+    method: 'PUT',
+    headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' },
+    body: blob
+  }).then(function(r) {
+    if (!r.ok) return r.text().then(function(e) { throw new Error(e); });
+    return r.json();
+  }).then(function(d) {
+    return { fileId: d.id, webUrl: d.webUrl, fileName: fname };
+  });
+}
+
+function appendRowToExcel(fileId, row, token) {
+  return graphCall('GET', '/me/drive/items/' + fileId + '/workbook/worksheets/Leads/usedRange', null, token)
+    .then(function(range) {
+      var next = (range.rowCount || 1) + 1;
+      var addr = 'A' + next + ':I' + next;
+      return graphCall('PATCH',
+        '/me/drive/items/' + fileId + '/workbook/worksheets/Leads/range(address=\'' + addr + '\')',
+        { values: [row] }, token);
+    });
+}
+
 function createEvent() {
-  var n = document.getElementById('inpEv').value.trim();
-  if (!n) { toast('Enter event name!', 1); return; }
-  for (var i=0;i<db.length;i++) { if(db[i].name===n){ toast('Already exists!',1); return; } }
-  db.unshift({name:n, leads:[], created:new Date().toLocaleString('en-IN')});
-  sd(); document.getElementById('inpEv').value=''; toast('Event created!'); renderEvents();
+  var name = document.getElementById('inpEv').value.trim();
+  if (!name) { toast('Enter event name!', 'terr'); return; }
+  for (var i=0; i<db.length; i++) { if (db[i].name===name) { toast('Already exists!','terr'); return; } }
+  var btn = document.getElementById('createEvBtn');
+  btn.innerHTML = '<span class="spin"></span>Creating on OneDrive...';
+  btn.disabled = true;
+  getToken().then(function(token) {
+    return createExcelOnOneDrive(name, token);
+  }).then(function(res) {
+    db.unshift({ name:name, fileId:res.fileId, webUrl:res.webUrl, fileName:res.fileName, leads:[], created:new Date().toLocaleString('en-IN') });
+    sd();
+    document.getElementById('inpEv').value = '';
+    toast('Event created! Excel file ready on OneDrive ✅');
+    renderEvents();
+    btn.innerHTML = '&#128640; Create Event';
+    btn.disabled = false;
+  }, function(e) {
+    toast('Error: ' + e.message, 'terr');
+    btn.innerHTML = '&#128640; Create Event';
+    btn.disabled = false;
+  });
 }
 
 function renderEvents() {
   document.getElementById('evBadge').textContent = db.length;
   document.getElementById('exportAllWrap').classList[db.length?'remove':'add']('hidden');
   var el = document.getElementById('evList');
-  if (!db.length) { el.innerHTML='<div class="empty"><div style="font-size:40px">&#128195;</div><div style="font-weight:600;margin-top:8px">No events yet</div></div>'; return; }
+  if (!db.length) { el.innerHTML='<div class="empty"><div style="font-size:40px">&#128195;</div><div style="font-weight:600;margin-top:8px">No events yet</div><div style="font-size:12px;margin-top:4px">Create your first event above</div></div>'; return; }
   var h='';
-  for (var i=0;i<db.length;i++) {
-    var ev=db[i];
-    h+='<div class="evcard">'+
+  for (var i=0; i<db.length; i++) {
+    var ev = db[i];
+    var link = ev.webUrl ? '<div style="margin-top:4px"><a href="'+x(ev.webUrl)+'" target="_blank" style="font-size:11px;color:#0a66c2">&#128202; Open Excel on OneDrive</a></div>' : '';
+    h += '<div class="evcard">'+
       '<div class="evname">&#128197; '+x(ev.name)+'</div>'+
       '<div class="evmeta">'+ev.leads.length+' lead'+(ev.leads.length!==1?'s':'')+' &middot; '+x(ev.created)+'</div>'+
+      link+
       '<div class="evbtns">'+
         '<button class="evbtn eb1" onclick="openCapture('+i+')">+ Add</button>'+
         '<button class="evbtn eb2" onclick="openLeads('+i+')">&#128101; View</button>'+
@@ -201,7 +342,7 @@ function renderEvents() {
         '<button class="evbtn eb4" onclick="delEv('+i+')">&#128465;</button>'+
       '</div></div>';
   }
-  el.innerHTML=h;
+  el.innerHTML = h;
 }
 
 function openCapture(i) { ci=i; document.getElementById('hdrSub').textContent=db[i].name; clearForm(); show('pgCapture'); }
@@ -209,51 +350,77 @@ function goCapture() { clearForm(); show('pgCapture'); }
 function openLeads(i) { ci=i; document.getElementById('hdrSub').textContent=db[i].name; renderLeads(); show('pgLeads'); }
 
 function delEv(i) {
-  if (!confirm('Delete "'+db[i].name+'" and all leads?')) return;
-  db.splice(i,1); sd(); renderEvents(); toast('Deleted');
+  if (!confirm('Delete "'+db[i].name+'" local record?\n(OneDrive Excel file will remain)')) return;
+  db.splice(i,1); sd(); renderEvents(); toast('Removed');
 }
 
 function renderLeads() {
-  var ev=db[ci];
-  document.getElementById('evInfo').innerHTML='<b>'+x(ev.name)+'</b> &middot; '+ev.leads.length+' lead'+(ev.leads.length!==1?'s':'')+' &middot; '+x(ev.created);
-  var el=document.getElementById('leadsList');
+  var ev = db[ci];
+  var link = ev.webUrl ? ' &middot; <a href="'+x(ev.webUrl)+'" target="_blank" style="color:#1d4ed8;font-weight:600">Open on OneDrive &#8599;</a>' : '';
+  document.getElementById('evInfo').innerHTML = '<b>'+x(ev.name)+'</b> &middot; '+ev.leads.length+' lead'+(ev.leads.length!==1?'s':'')+link;
+  var el = document.getElementById('leadsList');
   if (!ev.leads.length) { el.innerHTML='<div class="empty"><div style="font-size:40px">&#128101;</div><div style="font-weight:600;margin-top:8px">No leads yet</div></div>'; return; }
   var h='';
-  for (var i=ev.leads.length-1;i>=0;i--) {
+  for (var i=ev.leads.length-1; i>=0; i--) {
     var l=ev.leads[i];
-    h+='<div class="lcard"><div class="lrow"><div style="flex:1">'+
+    var syncCls = l.synced ? 'sync-ok' : 'sync-err';
+    var syncTxt = l.synced ? '&#10003; Synced to OneDrive' : '&#9888; Local only';
+    h += '<div class="lcard"><div class="lrow"><div style="flex:1">'+
       '<div class="lname">&#128100; '+x(l.name)+'</div>'+
       '<div class="ldet">&#127970; '+x(l.company)+'</div>'+
       (l.phone?'<div class="ldet">&#128222; '+x(l.phone)+'</div>':'')+
       (l.email?'<div class="ldet">&#9993; '+x(l.email)+'</div>':'')+
       (l.requirements?'<div class="lreq">&#128203; '+x(l.requirements)+'</div>':'')+
       (l.linkedin?'<div style="font-size:11px;margin-top:3px"><a href="'+x(l.linkedin)+'" target="_blank" style="color:#0a66c2">&#128279; LinkedIn</a></div>':'')+
-      '<div class="ltime">&#128336; '+x(l.datetime)+'</div>'+
+      '<div class="ltime">&#128336; '+x(l.datetime)+' &middot; <span class="'+syncCls+'">'+syncTxt+'</span></div>'+
       '</div><button class="delbtn" onclick="delLead('+i+')">&#128465;</button></div></div>';
   }
-  el.innerHTML=h;
+  el.innerHTML = h;
 }
 
 function saveLead() {
-  var n=document.getElementById('fName').value.trim();
-  var c=document.getElementById('fCompany').value.trim();
-  if(!n||!c){ toast('Name and Company required!',1); return; }
-  var lead={name:n,company:c,phone:document.getElementById('fPhone').value.trim(),email:document.getElementById('fEmail').value.trim(),requirements:document.getElementById('fRequirements').value.trim(),linkedin:document.getElementById('fLinkedin').value.trim(),datetime:new Date().toLocaleString('en-IN')};
+  var name = document.getElementById('fName').value.trim();
+  var company = document.getElementById('fCompany').value.trim();
+  if (!name||!company) { toast('Name and Company required!','terr'); return; }
+  var lead = {
+    name:name, company:company,
+    phone:document.getElementById('fPhone').value.trim(),
+    email:document.getElementById('fEmail').value.trim(),
+    requirements:document.getElementById('fRequirements').value.trim(),
+    linkedin:document.getElementById('fLinkedin').value.trim(),
+    datetime:new Date().toLocaleString('en-IN'),
+    synced:false
+  };
+  var btn = document.getElementById('saveBtn');
+  btn.innerHTML = '<span class="spin"></span>Saving to OneDrive...';
+  btn.disabled = true;
   db[ci].leads.push(lead); sd();
-  var btn=document.getElementById('saveBtn');
-  btn.textContent='Saved!'; btn.classList.add('done');
-  toast('Lead saved!');
-  setTimeout(function(){ btn.textContent='Save Lead'; btn.classList.remove('done'); clearForm(); }, 900);
+  var ev = db[ci];
+  getToken().then(function(token) {
+    var row = [ev.leads.length, ev.name, lead.name, lead.company, lead.phone, lead.email, lead.requirements, lead.linkedin, lead.datetime];
+    return appendRowToExcel(ev.fileId, row, token);
+  }).then(function() {
+    lead.synced = true; sd();
+    toast('Saved & synced to OneDrive! &#10003;');
+    btn.innerHTML = '&#128190; Save Lead';
+    btn.disabled = false;
+    clearForm();
+  }, function() {
+    toast('Saved locally. Sync failed — check connection.', 'terr');
+    btn.innerHTML = '&#128190; Save Lead';
+    btn.disabled = false;
+    clearForm();
+  });
 }
 
 function delLead(i) {
-  if(!confirm('Remove this lead?')) return;
+  if (!confirm('Remove this lead?')) return;
   db[ci].leads.splice(i,1); sd(); renderLeads(); toast('Removed');
 }
 
 function buildRows(ev) {
   var r=[];
-  for(var i=0;i<ev.leads.length;i++){
+  for (var i=0;i<ev.leads.length;i++) {
     var l=ev.leads[i];
     r.push({'Sr.No.':i+1,'Event':ev.name,'Full Name':l.name,'Company':l.company,'Phone':l.phone,'Email':l.email,'Requirements':l.requirements,'LinkedIn':l.linkedin,'Date & Time':l.datetime});
   }
@@ -262,42 +429,43 @@ function buildRows(ev) {
 function mWs(rows){ var ws=XLSX.utils.json_to_sheet(rows); ws['!cols']=[{wch:5},{wch:28},{wch:20},{wch:26},{wch:14},{wch:26},{wch:36},{wch:40},{wch:22}]; return ws; }
 
 function exportCurrent() {
-  if(!db[ci].leads.length){ toast('No leads!',1); return; }
+  if (!db[ci].leads.length) { toast('No leads!','terr'); return; }
   var wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,mWs(buildRows(db[ci])),'Leads');
   XLSX.writeFile(wb,'SAVIC_'+db[ci].name.replace(/\s+/g,'_').substring(0,40)+'_'+new Date().toISOString().slice(0,10)+'.xlsx');
   toast('Exported!');
 }
 function exportEv(i) {
-  if(!db[i].leads.length){ toast('No leads!',1); return; }
+  if (!db[i].leads.length) { toast('No leads!','terr'); return; }
   var wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,mWs(buildRows(db[i])),'Leads');
   XLSX.writeFile(wb,'SAVIC_'+db[i].name.replace(/\s+/g,'_').substring(0,40)+'_'+new Date().toISOString().slice(0,10)+'.xlsx');
   toast('Exported!');
 }
 function exportAll() {
   var all=[]; var wb=XLSX.utils.book_new();
-  for(var i=0;i<db.length;i++){
-    if(!db[i].leads.length) continue;
+  for (var i=0;i<db.length;i++) {
+    if (!db[i].leads.length) continue;
     var rows=buildRows(db[i]);
-    for(var j=0;j<rows.length;j++) all.push(rows[j]);
+    for (var j=0;j<rows.length;j++) all.push(rows[j]);
     XLSX.utils.book_append_sheet(wb,mWs(rows),db[i].name.substring(0,28).replace(/[:\\\/\?\*\[\]]/g,''));
   }
-  if(!all.length){ toast('No leads!',1); return; }
+  if (!all.length) { toast('No leads!','terr'); return; }
   wb.SheetNames.unshift('ALL LEADS'); wb.Sheets['ALL LEADS']=mWs(all);
   XLSX.writeFile(wb,'SAVIC_Master_'+new Date().toISOString().slice(0,10)+'.xlsx');
   toast('Master Excel exported!');
 }
 
 function toggleMic(f) {
-  if(af===f){ stopMic(); return; }
+  if (af===f) { stopMic(); return; }
   stopMic();
   var SR=window.SpeechRecognition||window.webkitSpeechRecognition;
-  if(!SR){ toast('Voice not supported',1); return; }
+  if (!SR) { toast('Voice not supported','terr'); return; }
   sr=new SR(); sr.lang='en-IN'; sr.continuous=false; sr.interimResults=false;
   sr.onstart=function(){
     af=f;
-    document.getElementById('c'+f.charAt(0).toUpperCase()+f.slice(1)).classList.add('lit');
-    document.getElementById('m'+f.charAt(0).toUpperCase()+f.slice(1)).classList.add('on');
-    document.getElementById('m'+f.charAt(0).toUpperCase()+f.slice(1)).textContent='Stop';
+    var k=f.charAt(0).toUpperCase()+f.slice(1);
+    document.getElementById('c'+k).classList.add('lit');
+    document.getElementById('m'+k).classList.add('on');
+    document.getElementById('m'+k).textContent='Stop';
     document.getElementById('vBanner').classList.add('on');
     var lbl={name:'Full Name',company:'Company',phone:'Phone',email:'Email',requirements:'Requirements'};
     document.getElementById('vBannerTxt').textContent='Listening for '+lbl[f]+'... speak now';
@@ -308,13 +476,13 @@ function toggleMic(f) {
     var el=document.getElementById(ids[f]);
     el.value=el.value?el.value+' '+t:t;
   };
-  sr.onerror=function(){ toast('Mic error',1); stopMic(); };
+  sr.onerror=function(){ toast('Mic error','terr'); stopMic(); };
   sr.onend=function(){ stopMic(); };
   sr.start();
 }
 function stopMic(){
-  if(sr){ try{sr.stop();}catch(e){} sr=null; }
-  if(af){
+  if (sr) { try{sr.stop();}catch(e){} sr=null; }
+  if (af) {
     var k=af.charAt(0).toUpperCase()+af.slice(1);
     document.getElementById('c'+k).classList.remove('lit');
     document.getElementById('m'+k).classList.remove('on');
@@ -327,7 +495,7 @@ function stopMic(){
 function searchLI(){
   var n=document.getElementById('fName').value.trim();
   var c=document.getElementById('fCompany').value.trim();
-  if(!n){ toast('Enter name first',1); return; }
+  if (!n) { toast('Enter name first','terr'); return; }
   window.open('https://www.google.com/search?q='+encodeURIComponent('"'+n+'"'+(c?' "'+c+'"':'')+' site:linkedin.com/in'),'_blank');
   document.getElementById('liStatus').textContent='Copy the LinkedIn URL from Google and paste above';
 }
@@ -336,8 +504,6 @@ function clearForm(){
   document.getElementById('liStatus').textContent='';
   stopMic();
 }
-
-ld(); renderEvents();
 </script>
 </body>
 </html>
