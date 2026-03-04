@@ -195,16 +195,26 @@ input.filled{border-color:#10b981;background:#f0fdf4}
     <div class="stat-box"><div class="num" id="statTotal">0</div><div class="lbl">Total Leads</div></div>
     <div class="stat-box"><div class="num" id="statToday">0</div><div class="lbl">Today</div></div>
   </div>
-  <div class="card" style="margin-bottom:14px">
-    <label>Filter by Event</label>
-    <select id="leadsEventSel" onchange="renderLeads()">
-      <option value="">All Events</option>
-    </select>
+
+  <!-- Admin-only controls -->
+  <div id="adminLeadsControls" style="display:none">
+    <div class="card" style="margin-bottom:14px">
+      <label>Filter by Event</label>
+      <select id="leadsEventSel" onchange="renderLeads()">
+        <option value="">All Events</option>
+      </select>
+    </div>
+    <div style="display:flex;gap:8px;margin-bottom:14px">
+      <button class="btn btn-primary btn-sm" onclick="exportExcel()">⬇️ Export Excel</button>
+      <button class="btn btn-danger btn-sm" onclick="clearAllLeads()">🗑 Clear All</button>
+    </div>
   </div>
-  <div style="display:flex;gap:8px;margin-bottom:14px">
-    <button class="btn btn-primary btn-sm" onclick="exportExcel()">⬇️ Export Excel</button>
-    <button class="btn btn-danger btn-sm" onclick="clearAllLeads()">🗑 Clear All</button>
+
+  <!-- Field user info bar -->
+  <div id="fieldUserLeadsInfo" style="display:none" class="info-box" style="margin-bottom:12px">
+    📋 Showing your leads for: <b id="fieldUserEventLabel"></b>
   </div>
+
   <div id="leadsList"></div>
 </div>
 
@@ -305,8 +315,9 @@ input.filled{border-color:#10b981;background:#f0fdf4}
 // Replace CLIENT_ID after registering at portal.azure.com
 // App Registration → Single-page app → Redirect URI = this page URL
 // Permissions: Files.ReadWrite, User.Read
-const CLIENT_ID = '5680a642-9456-40ae-8ce9-9caf0cf4eea8';
-const TENANT   = '8a50a18b-c135-4d02-b21a-bd6b114c6755';
+const CLIENT_ID    = '5680a642-9456-40ae-8ce9-9caf0cf4eea8';
+const TENANT       = '8a50a18b-c135-4d02-b21a-bd6b114c6755'; // Only SAVIC org accounts allowed
+const ALLOWED_ADMINS = ['meghan.nagvekar@savictech.com', 'mahesh@savictech.com']; // Only these 2 can sign in
 const SCOPES   = 'Files.ReadWrite User.Read';
 const AD_PASS  = 'savic@admin2026';
 const EV_KEY   = 'savic_events_v2';
@@ -352,15 +363,26 @@ async function loadMsUser(token) {
     });
     if (!r.ok) { sessionStorage.removeItem(TOKEN_KEY); return; }
     const u = await r.json();
+
+    // ── SECURITY: Only allow specific admin accounts ─────────────────────────
+    const email = (u.mail || u.userPrincipalName || '').toLowerCase();
+    if (!ALLOWED_ADMINS.includes(email)) {
+      sessionStorage.removeItem(TOKEN_KEY);
+      toast('❌ Access denied. Only authorised SAVIC admins can sign in.', 'err');
+      window.location.href = `https://login.microsoftonline.com/${TENANT}/oauth2/v2.0/logout`;
+      return;
+    }
+    // ─────────────────────────────────────────────────────────────────────────
+
     msToken = token;
-    msUser = { name: u.displayName, email: u.mail || u.userPrincipalName };
-    document.getElementById('msUserName').textContent = msUser.name;
+    msUser  = { name: u.displayName, email };
+    document.getElementById('msUserName').textContent  = msUser.name;
     document.getElementById('msUserBadge').style.display = 'flex';
     document.getElementById('odUserEmail').textContent = msUser.email;
-    document.getElementById('odConnected').style.display = 'block';
+    document.getElementById('odConnected').style.display    = 'block';
     document.getElementById('odDisconnected').style.display = 'none';
     updateSaveBtn();
-    toast('✅ Connected: ' + msUser.email, 'ok');
+    toast('✅ Signed in as ' + msUser.email, 'ok');
   } catch(e) { sessionStorage.removeItem(TOKEN_KEY); }
 }
 
@@ -389,109 +411,138 @@ function msSignOut() {
   toast('Disconnected from OneDrive');
 }
 
-async function getAccessToken() { return msToken; }
+async function getAccessToken() {
+  const token = msToken || sessionStorage.getItem(TOKEN_KEY);
+  if (!token) return null;
+
+  // Verify token is still valid with a lightweight Graph call
+  try {
+    const r = await fetch('https://graph.microsoft.com/v1.0/me?$select=id', {
+      headers:{ Authorization:'Bearer '+token }
+    });
+    if (r.status === 401) {
+      // Token expired – clear and prompt re-login
+      msToken = null; msUser = null;
+      sessionStorage.removeItem(TOKEN_KEY);
+      document.getElementById('msUserBadge').style.display = 'none';
+      document.getElementById('odConnected').style.display    = 'none';
+      document.getElementById('odDisconnected').style.display = 'block';
+      updateSaveBtn();
+      toast('⚠️ Session expired. Please sign in with Microsoft again.', 'err');
+      return null;
+    }
+  } catch(e) {}
+  return token;
+}
 
 function showAzureHelp() {
   document.getElementById('azureHelp').style.display = 'block';
 }
 
-// ─── ONEDRIVE: SAVE ROW ──────────────────────────────────────────────────────
-async function saveLeadToOneDrive(lead, event) {
+// ─── ONEDRIVE FOR BUSINESS (SharePoint) SAVE ─────────────────────────────────
+// Uses /me/drive which works for both personal OneDrive AND OneDrive for Business
+// Folder path should be relative to Documents, e.g:
+//   SAVIC Marketing/Events/2026/11 March - Microsoft
+async function saveLeadToOneDrive(lead, ev) {
   const token = await getAccessToken();
-  if (!token) return { ok: false, msg: 'Not connected to OneDrive' };
+  if (!token) return { ok:false, msg:'Not signed in to OneDrive' };
 
-  const folder = (event.folder || 'Marketing/Wunder/Leads').replace(/^\/|\/$/g, '');
-  const fileName = (event.file || event.name.replace(/[^a-zA-Z0-9]/g, '_') + '_Leads') + '.xlsx';
-  const filePath = folder + '/' + fileName;
-  const apiBase = 'https://graph.microsoft.com/v1.0/me/drive/root:/' + encodeURIComponent(filePath);
+  const folder   = (ev.folder||'').replace(/^\/+|\/+$/g,'').trim();
+  const baseName = (ev.file  ||ev.name.replace(/[^a-zA-Z0-9_\-. ]/g,'_').trim());
+  const fileName = baseName.endsWith('.xlsx') ? baseName : baseName+'.xlsx';
+  const filePath = folder ? folder+'/'+fileName : fileName;
 
-  // Try to get existing file
-  let existingData = null;
-  try {
-    const dlResp = await fetch(apiBase + ':/content', {
-      headers: { Authorization: 'Bearer ' + token }
-    });
-    if (dlResp.ok) {
-      const ab = await dlResp.arrayBuffer();
-      existingData = XLSX.read(ab, { type: 'array' });
-    }
-  } catch(e) {}
+  console.log('📁 Target path:', filePath);
 
-  // Build rows
-  const header = ['#','Event','Captured By','Name','Designation','Company','Phone','Email','LinkedIn','Requirements','Captured At'];
+  const GRAPH      = 'https://graph.microsoft.com/v1.0';
+  // /me/drive/root: works for SharePoint-backed OneDrive for Business
+  const pathEnc    = filePath.split('/').map(p=>encodeURIComponent(p)).join('/');
+  const itemUrl    = `${GRAPH}/me/drive/root:/${pathEnc}`;
+
+  // ── 1. Try downloading existing file to append rows ──────────────────────
   let rows = [];
-  if (existingData) {
-    const ws = existingData.Sheets[existingData.SheetNames[0]];
-    rows = XLSX.utils.sheet_to_json(ws, { header: 1 });
-    // Remove header row if present
-    if (rows.length && rows[0][0] === '#') rows.shift();
-  }
+  try {
+    const dlR = await fetch(itemUrl+':/content', {
+      headers:{ Authorization:'Bearer '+token }
+    });
+    console.log('⬇️ Download status:', dlR.status);
+    if (dlR.ok) {
+      const ab  = await dlR.arrayBuffer();
+      const wb  = XLSX.read(ab,{type:'array'});
+      const ws  = wb.Sheets[wb.SheetNames[0]];
+      const all = XLSX.utils.sheet_to_json(ws,{header:1,defval:''});
+      rows = all.length>1 ? all.slice(1) : [];   // drop header
+      console.log('✅ Existing rows:', rows.length);
+    } else if (dlR.status===404) {
+      console.log('📄 File not found – creating new');
+      if (folder) await ensureFolder(token, folder);
+    } else {
+      const t = await dlR.text();
+      console.error('❌ Download error', dlR.status, t);
+      return {ok:false, msg:`Cannot read file (${dlR.status}). Check folder path & permissions.`};
+    }
+  } catch(e){ console.warn('Download exception:', e); }
 
-  const newRow = [
-    rows.length + 1,
-    lead.event,
-    lead.capturedBy,
-    lead.name,
-    lead.designation,
-    lead.company,
-    lead.phone,
-    lead.email,
-    lead.linkedin,
-    lead.requirements,
-    new Date(lead.capturedAt).toLocaleString('en-IN')
-  ];
-  rows.push(newRow);
+  // ── 2. Build new row ──────────────────────────────────────────────────────
+  const HEADER=['#','Event','Captured By','Name','Designation','Company','Phone','Email','LinkedIn','Requirements','Captured At'];
+  rows.push([
+    rows.length+1, lead.event, lead.capturedBy||'',
+    lead.name, lead.designation||'', lead.company,
+    lead.phone, lead.email||'', lead.linkedin||'',
+    lead.requirements, new Date(lead.capturedAt).toLocaleString('en-IN')
+  ]);
 
-  // Build workbook
-  const wb = XLSX.utils.book_new();
-  const ws = XLSX.utils.aoa_to_sheet([header, ...rows]);
-  ws['!cols'] = [{wch:4},{wch:28},{wch:18},{wch:22},{wch:20},{wch:28},{wch:14},{wch:26},{wch:36},{wch:40},{wch:22}];
-  // Style header row
-  const range = XLSX.utils.decode_range(ws['!ref']);
-  for (let c = range.s.c; c <= range.e.c; c++) {
-    const cell = ws[XLSX.utils.encode_cell({r:0, c})];
-    if (cell) cell.s = { font: { bold: true }, fill: { fgColor: { rgb: '2563EB' } } };
-  }
-  XLSX.utils.book_append_sheet(wb, ws, 'Leads');
+  // ── 3. Build workbook ─────────────────────────────────────────────────────
+  const wb2 = XLSX.utils.book_new();
+  const ws2 = XLSX.utils.aoa_to_sheet([HEADER,...rows]);
+  ws2['!cols']=[{wch:4},{wch:30},{wch:18},{wch:22},{wch:20},{wch:28},{wch:14},{wch:26},{wch:36},{wch:40},{wch:22}];
+  XLSX.utils.book_append_sheet(wb2,ws2,'Leads');
+  const buf = XLSX.write(wb2,{bookType:'xlsx',type:'array'});
 
-  // Upload to OneDrive
-  const wbArray = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
-  const blob = new Blob([wbArray], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-
-  // Ensure folder exists first
-  await ensureFolder(token, folder);
-
-  const uploadResp = await fetch(apiBase + ':/content', {
-    method: 'PUT',
-    headers: {
-      Authorization: 'Bearer ' + token,
-      'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+  // ── 4. Upload via PUT (create or overwrite) ───────────────────────────────
+  const upR = await fetch(itemUrl+':/content', {
+    method :'PUT',
+    headers:{
+      Authorization :'Bearer '+token,
+      'Content-Type':'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
     },
-    body: blob
+    body: new Blob([buf])
   });
-
-  if (uploadResp.ok) {
-    const data = await uploadResp.json();
-    return { ok: true, url: data.webUrl, msg: 'Saved to OneDrive ✅' };
-  } else {
-    const err = await uploadResp.json().catch(()=>({error:{message:'Upload failed'}}));
-    return { ok: false, msg: err?.error?.message || 'Upload failed' };
+  console.log('⬆️ Upload status:', upR.status);
+  if (upR.ok) {
+    const d = await upR.json();
+    console.log('✅ Saved! URL:', d.webUrl);
+    return {ok:true, url:d.webUrl};
   }
+  const errTxt = await upR.text();
+  console.error('❌ Upload error:', upR.status, errTxt);
+
+  // ── Common error hints ────────────────────────────────────────────────────
+  let hint = '';
+  if (upR.status===401) hint = 'Token expired – please sign out and sign in again.';
+  else if (upR.status===403) hint = 'Permission denied – make sure Files.ReadWrite is granted in Azure portal.';
+  else if (upR.status===404) hint = 'Folder path not found on OneDrive. Check the path in Admin → Event settings.';
+  else if (upR.status===413) hint = 'File too large.';
+  return {ok:false, msg:`Upload failed (${upR.status}). ${hint}`};
 }
 
 async function ensureFolder(token, folderPath) {
+  const GRAPH = 'https://graph.microsoft.com/v1.0';
   const parts = folderPath.split('/').filter(Boolean);
-  let current = 'https://graph.microsoft.com/v1.0/me/drive/root/children';
-  for (const part of parts) {
+  for (let i=0; i<parts.length; i++) {
+    const parentEnc = parts.slice(0,i).map(encodeURIComponent).join('/');
+    const parentUrl = parentEnc
+      ? `${GRAPH}/me/drive/root:/${parentEnc}:/children`
+      : `${GRAPH}/me/drive/root/children`;
     try {
-      await fetch(current, {
-        method: 'POST',
-        headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: part, folder: {}, '@microsoft.graph.conflictBehavior': 'ignore' })
+      const r = await fetch(parentUrl,{
+        method :'POST',
+        headers:{ Authorization:'Bearer '+token, 'Content-Type':'application/json' },
+        body   :JSON.stringify({name:parts[i],folder:{},
+          '@microsoft.graph.conflictBehavior':'ignore'})
       });
-      current = 'https://graph.microsoft.com/v1.0/me/drive/root:/' +
-        encodeURIComponent(parts.slice(0, parts.indexOf(part) + 1).join('/')) + ':/children';
-    } catch(e) {}
+      console.log(`📂 Ensure folder "${parts[i]}":`, r.status);
+    } catch(e){ console.warn('ensureFolder:',e); }
   }
 }
 
@@ -555,7 +606,8 @@ async function saveLead() {
 
   // Save to OneDrive if connected
   const ss = document.getElementById('syncStatus');
-  if (msUser && activeEvent.folder) {
+  console.log('msUser:', msUser, '| msToken:', msToken ? 'present' : 'missing', '| folder:', activeEvent.folder);
+  if (msToken && activeEvent.folder) {
     ss.className = 'sync-status sync-ing';
     ss.textContent = '⏳ Saving to OneDrive…';
     ss.style.display = 'block';
@@ -565,17 +617,24 @@ async function saveLead() {
     btn.disabled = false;
     if (result.ok) {
       ss.className = 'sync-status sync-ok';
-      ss.textContent = '☁️ Saved to OneDrive: ' + (activeEvent.folder) + '/' + (activeEvent.file || activeEvent.name.replace(/[^a-zA-Z0-9]/g,'_')+'_Leads') + '.xlsx';
+      ss.textContent = '☁️ Saved to OneDrive → ' + (activeEvent.folder||'') + '/' + (activeEvent.file||activeEvent.name.replace(/[^a-zA-Z0-9_\- ]/g,'_'))+'.xlsx';
+      if (result.url) ss.innerHTML += ` <a href="${result.url}" target="_blank" style="color:#166534;font-weight:600">Open file ↗</a>`;
       toast('✅ Lead saved to OneDrive!', 'ok');
     } else {
       ss.className = 'sync-status sync-err';
-      ss.textContent = '❌ OneDrive error: ' + result.msg + ' (saved locally)';
-      toast('Saved locally, OneDrive error', 'err');
+      ss.textContent = '❌ ' + result.msg;
+      toast('OneDrive error – check console (F12)', 'err');
     }
   } else {
     ss.style.display = 'none';
-    if (!msUser) toast('✅ Lead saved locally (connect OneDrive for cloud sync)');
-    else toast('✅ Lead saved! (no folder set for this event)');
+    if (!msToken) {
+      toast('⚠️ Not connected to OneDrive – saved locally only');
+    } else if (!activeEvent.folder) {
+      ss.className = 'sync-status sync-err';
+      ss.textContent = '⚠️ No OneDrive folder set for this event! Go to Admin → Edit event → add folder path.';
+      ss.style.display = 'block';
+      toast('⚠️ No OneDrive folder set for this event', 'err');
+    }
   }
 
   clearForm();
@@ -647,35 +706,70 @@ function stopMic() {
 function cap(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
 
 // ─── LEADS TAB ───────────────────────────────────────────────────────────────
+function isAdmin() {
+  return msUser && ALLOWED_ADMINS.includes(msUser.email.toLowerCase());
+}
+
 function renderLeads() {
-  const evF = document.getElementById('leadsEventSel').value;
-  const list = evF ? leads.filter(l => l.event === evF) : leads;
   const el = document.getElementById('leadsList');
-  if (!list.length) { el.innerHTML = '<div style="text-align:center;color:#94a3b8;padding:30px">No leads yet</div>'; return; }
+  let list = [];
+
+  if (isAdmin()) {
+    // Admin sees all leads, filterable by event
+    const evF = document.getElementById('leadsEventSel').value;
+    list = evF ? leads.filter(l => l.event === evF) : leads;
+  } else if (activeEvent) {
+    // Field user sees only their own leads for their active event
+    const sess = sessionStorage.getItem('savic_sess');
+    const userName = sess ? JSON.parse(sess).userName : '';
+    list = leads.filter(l => l.event === activeEvent.name && l.capturedBy === userName);
+  }
+
+  // Update stats
+  document.getElementById('statTotal').textContent = isAdmin() ? leads.length : list.length;
+  const today = new Date().toDateString();
+  document.getElementById('statToday').textContent = list.filter(l => new Date(l.capturedAt).toDateString() === today).length;
+
+  if (!list.length) {
+    el.innerHTML = '<div style="text-align:center;color:#94a3b8;padding:30px">No leads found</div>';
+    return;
+  }
   el.innerHTML = list.slice().reverse().map(l => `
     <div class="lead-item">
-      <h3>${l.name}${l.designation ? ' <span style="font-weight:400;font-size:12px;color:#64748b">– ' + l.designation + '</span>' : ''}</h3>
-      <p>🏢 ${l.company} &nbsp;•&nbsp; 👤 ${l.capturedBy || '–'}</p>
-      <p>📞 ${l.phone}${l.email ? ' &nbsp;✉️ ' + l.email : ''}</p>
-      <p style="margin-top:4px">📝 ${l.requirements.substring(0, 90)}${l.requirements.length > 90 ? '…' : ''}</p>
+      <h3>${l.name}${l.designation ? ' <span style="font-weight:400;font-size:12px;color:#64748b">– '+l.designation+'</span>' : ''}</h3>
+      <p>🏢 ${l.company} &nbsp;•&nbsp; 👤 ${l.capturedBy||'–'}</p>
+      <p>📞 ${l.phone}${l.email?' &nbsp;✉️ '+l.email:''}</p>
+      <p style="margin-top:4px">📝 ${l.requirements.substring(0,90)}${l.requirements.length>90?'…':''}</p>
       <p style="font-size:11px;color:#94a3b8;margin-top:4px">📍 ${l.event} &nbsp;•&nbsp; ${new Date(l.capturedAt).toLocaleString('en-IN')}</p>
     </div>`).join('');
 }
 
 function populateLeadsDropdown() {
-  const s = document.getElementById('leadsEventSel');
-  const cur = s.value;
-  s.innerHTML = '<option value="">All Events</option>';
-  events.forEach(ev => s.innerHTML += `<option value="${ev.name}"${cur===ev.name?' selected':''}>${ev.name}</option>`);
+  // Show/hide controls based on role
+  document.getElementById('adminLeadsControls').style.display = isAdmin() ? 'block' : 'none';
+  document.getElementById('fieldUserLeadsInfo').style.display = (!isAdmin() && activeEvent) ? 'block' : 'none';
+  if (activeEvent) document.getElementById('fieldUserEventLabel').textContent = activeEvent.name;
+
+  if (isAdmin()) {
+    const s = document.getElementById('leadsEventSel');
+    const cur = s.value;
+    s.innerHTML = '<option value="">All Events</option>';
+    events.forEach(ev => s.innerHTML += `<option value="${ev.name}"${cur===ev.name?' selected':''}>${ev.name}</option>`);
+  }
   renderLeads();
 }
 
 function updateBadge() {
-  const n = leads.length;
-  document.getElementById('badgeTab').textContent = n;
-  document.getElementById('statTotal').textContent = n;
+  const sess = sessionStorage.getItem('savic_sess');
+  const userName = sess ? JSON.parse(sess).userName : '';
+  // Badge count: admin sees all, field user sees their own
+  const myLeads = isAdmin()
+    ? leads
+    : leads.filter(l => activeEvent && l.event === activeEvent.name && l.capturedBy === userName);
+  document.getElementById('badgeTab').textContent = myLeads.length;
+  document.getElementById('statTotal').textContent = isAdmin() ? leads.length : myLeads.length;
   const today = new Date().toDateString();
-  document.getElementById('statToday').textContent = leads.filter(l => new Date(l.capturedAt).toDateString() === today).length;
+  document.getElementById('statToday').textContent = myLeads.filter(l => new Date(l.capturedAt).toDateString() === today).length;
 }
 
 function exportExcel() {
