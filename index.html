@@ -149,7 +149,10 @@ textarea{resize:vertical;min-height:70px;margin-bottom:0}
         <div style="font-size:13px;color:#6b7280;margin-top:4px">Enter password to configure OneDrive</div>
       </div>
       <label>Admin Password</label>
-      <input type="password" id="adminPwd" placeholder="Enter password" onkeydown="if(event.key==='Enter')unlockAdmin()"/>
+      <div style="position:relative;margin-bottom:12px">
+        <input type="password" id="adminPwd" placeholder="Enter password" onkeydown="if(event.key==='Enter')unlockAdmin()" style="margin-bottom:0;padding-right:44px"/>
+        <button onclick="togglePwdView()" id="eyeBtn" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:18px;color:#6b7280">👁</button>
+      </div>
       <button class="btn btn-blue" onclick="unlockAdmin()">Unlock</button>
       <div class="admin-note" style="text-align:center">Default: savic@admin</div>
     </div>
@@ -395,22 +398,53 @@ function unlockAdmin() {
     initAdmin();
   } else { toast('Wrong password','error'); }
 }
+function togglePwdView() {
+  const inp = document.getElementById('adminPwd');
+  const btn = document.getElementById('eyeBtn');
+  if(inp.type==='password'){ inp.type='text'; btn.textContent='🙈'; }
+  else { inp.type='password'; btn.textContent='👁'; }
+}
+
 async function loadOneDriveFolders() {
   toast('Loading OneDrive folders...','loading');
-  document.getElementById('folderList').innerHTML = '<div style="color:#6b7280;font-size:13px;padding:8px">⏳ Loading...</div>';
+  document.getElementById('folderList').innerHTML = '<div style="color:#6b7280;font-size:13px;padding:12px;text-align:center">⏳ Connecting to OneDrive...</div>';
   document.getElementById('folderPicker').style.display='block';
   try {
     const data = await callClaude([{role:'user',content:
       `List all folders in the root of my OneDrive. Return ONLY a JSON array of folder name strings. No markdown, no explanation. Example: ["Folder1","Folder2","Documents"]`
     }], 'You are a Microsoft 365 assistant. Use OneDrive tools to list folders. Return only a JSON array of folder name strings.', 800);
     const txt = extractTxt(data).replace(/```json|```/g,'').trim();
+
+    // Check if response indicates auth needed
+    if(txt.toLowerCase().includes('sign in')||txt.toLowerCase().includes('login')||
+       txt.toLowerCase().includes('auth')||txt.toLowerCase().includes('permission')||
+       txt.toLowerCase().includes('unauthorized')||txt.toLowerCase().includes('401')||
+       txt===''||txt==='[]'||txt.startsWith('{')){
+      showSignInPrompt();
+      return;
+    }
     const folders = JSON.parse(txt);
     document.getElementById('statusBar').classList.remove('show');
     renderFolderList(folders, '', 'root');
   } catch(e) {
-    document.getElementById('folderList').innerHTML = '<div style="color:#991b1b;font-size:13px;padding:8px">❌ Could not load folders — check OneDrive connection</div>';
-    toast('Could not load OneDrive folders','error');
+    showSignInPrompt();
   }
+}
+
+function showSignInPrompt() {
+  document.getElementById('statusBar').classList.remove('show');
+  document.getElementById('folderList').innerHTML = `
+    <div style="padding:20px;text-align:center">
+      <div style="font-size:32px;margin-bottom:8px">☁️</div>
+      <div style="font-size:14px;font-weight:700;color:#1f2937;margin-bottom:4px">Sign in to Microsoft</div>
+      <div style="font-size:12px;color:#6b7280;margin-bottom:16px">Connect your Microsoft 365 account to browse OneDrive folders</div>
+      <a href="https://login.microsoftonline.com/common/oauth2/v2.0/authorize?client_id=00000003-0000-0000-c000-000000000000&response_type=token&redirect_uri=${encodeURIComponent(window.location.href)}&scope=Files.ReadWrite.All" 
+         target="_blank"
+         style="display:inline-flex;align-items:center;gap:8px;background:#0078d4;color:#fff;border-radius:8px;padding:11px 20px;font-size:14px;font-weight:700;text-decoration:none">
+        <span style="font-size:18px">🔑</span> Sign in with Microsoft
+      </a>
+      <div style="font-size:11px;color:#9ca3af;margin-top:12px">After signing in, tap Browse again</div>
+    </div>`;
 }
 
 function renderFolderList(folders, parentPath, level) {
