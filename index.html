@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
-<title>SAVIC Lead Capture</title>
+<title>SAVIC Leads Capture</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;font-family:'Segoe UI',sans-serif}
 body{background:#f0f4f8;min-height:100vh}
@@ -54,7 +54,6 @@ input.filled{border-color:#10b981;background:#f0fdf4}
 .ev-item p{font-size:11px;color:#64748b;margin-top:2px}
 .token-badge{display:inline-block;background:#eff6ff;color:#1d4ed8;padding:2px 8px;border-radius:6px;font-size:11px;font-weight:600;font-family:monospace}
 .od-badge{display:inline-flex;align-items:center;gap:5px;background:#f0fdf4;color:#166534;padding:3px 8px;border-radius:6px;font-size:11px;margin-top:4px}
-.sp-badge{display:inline-flex;align-items:center;gap:5px;background:#eff6ff;color:#1d4ed8;padding:3px 8px;border-radius:6px;font-size:11px;margin-top:4px}
 .warn-box{background:#fffbeb;border:1px solid #f59e0b;border-radius:8px;padding:12px;font-size:12px;color:#92400e;margin-bottom:12px}
 .info-box{background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:12px;font-size:12px;color:#1e40af;margin-bottom:12px}
 .sync-status{font-size:12px;padding:8px 12px;border-radius:6px;margin-top:8px;display:none}
@@ -143,7 +142,7 @@ input.filled{border-color:#10b981;background:#f0fdf4}
 <div class="pane" id="paneAdmin">
   <div id="adminMsLogin" class="card">
     <h2>🔑 Admin Login</h2>
-    <p style="font-size:13px;color:#64748b;margin-bottom:14px">Sign in with your Microsoft account to manage events and save leads to SharePoint.</p>
+    <p style="font-size:13px;color:#64748b;margin-bottom:14px">Sign in with <b>meghan.nagvekar@savictech.com</b> to manage events and sync leads to your OneDrive.</p>
     <button class="btn btn-ms" onclick="msSignIn()" style="margin-bottom:12px">
       <svg width="18" height="18" viewBox="0 0 21 21"><rect x="1" y="1" width="9" height="9" fill="#f25022"/><rect x="11" y="1" width="9" height="9" fill="#7fba00"/><rect x="1" y="11" width="9" height="9" fill="#00a4ef"/><rect x="11" y="11" width="9" height="9" fill="#ffb900"/></svg>
       Sign in with Microsoft
@@ -165,19 +164,19 @@ input.filled{border-color:#10b981;background:#f0fdf4}
       </div>
     </div>
 
-    <!-- SharePoint/OneDrive status -->
+    <!-- OneDrive status -->
     <div class="card">
-      <h2>☁️ Microsoft 365 Connection</h2>
+      <h2>☁️ OneDrive Connection</h2>
       <div id="odConnected" style="display:none">
-        <div class="od-badge">✅ Connected as <span id="odUserEmail"></span></div>
-        <p style="font-size:12px;color:#64748b;margin-top:8px">Leads can be saved to your <b>OneDrive</b> or any <b>SharePoint / Teams shared folder</b>.</p>
+        <div class="od-badge">✅ Connected — <span id="odUserEmail"></span></div>
+        <p style="font-size:12px;color:#64748b;margin-top:8px">Leads will be saved to your OneDrive folder set per event.</p>
         <button class="btn btn-danger btn-sm" onclick="msSignOut()" style="margin-top:10px">Disconnect</button>
       </div>
       <div id="odDisconnected">
-        <div class="warn-box">⚠️ Not connected. Leads save locally only. Connect Microsoft to save to SharePoint or OneDrive.</div>
+        <div class="warn-box">⚠️ OneDrive not connected. Leads save locally only.</div>
         <button class="btn btn-ms" onclick="msSignIn()">
           <svg width="16" height="16" viewBox="0 0 21 21"><rect x="1" y="1" width="9" height="9" fill="#f25022"/><rect x="11" y="1" width="9" height="9" fill="#7fba00"/><rect x="1" y="11" width="9" height="9" fill="#00a4ef"/><rect x="11" y="11" width="9" height="9" fill="#ffb900"/></svg>
-          Connect Microsoft 365
+          Connect OneDrive
         </button>
       </div>
     </div>
@@ -193,23 +192,12 @@ input.filled{border-color:#10b981;background:#f0fdf4}
           <button class="btn btn-secondary btn-sm" onclick="genToken()">Auto</button>
         </div>
       </div>
-
-      <!-- Save destination -->
-      <div class="frow">
-        <label>Save Leads To</label>
-        <div style="display:flex;gap:8px;margin-bottom:8px">
-          <button id="destBtnOD" class="btn btn-secondary btn-sm" onclick="setDestMode('onedrive')" style="flex:1">🏠 My OneDrive</button>
-          <button id="destBtnSP" class="btn btn-primary btn-sm" onclick="setDestMode('sharepoint')" style="flex:1">🏢 SharePoint / Teams</button>
-        </div>
-        <div id="destModeLabel" class="info-box" style="margin-bottom:8px">🏢 <b>SharePoint / Teams</b> selected — pick a shared folder below</div>
-      </div>
-
-      <div class="frow"><label>Folder Location *</label>
+      <div class="frow"><label>OneDrive Folder *</label>
         <div style="display:flex;gap:8px">
-          <input type="text" id="newEvFolder" placeholder="Select folder using Browse →" style="flex:1" readonly/>
+          <input type="text" id="newEvFolder" placeholder="Select folder →" style="flex:1" readonly/>
           <button class="btn btn-green btn-sm" onclick="openFolderPicker()">📁 Browse</button>
         </div>
-        <div id="selectedFolderDisplay" style="display:none;margin-top:6px;border-radius:7px;padding:8px 10px;font-size:12px"></div>
+        <div id="selectedFolderDisplay" style="display:none;margin-top:6px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:7px;padding:8px 10px;font-size:12px;color:#166534"></div>
       </div>
       <div class="frow"><label>Excel File Name</label><input type="text" id="newEvFile" placeholder="e.g. SAP_Mumbai_Leads"/></div>
       <button class="btn btn-primary" onclick="addEvent()" style="margin-top:4px">➕ Create Event</button>
@@ -220,17 +208,13 @@ input.filled{border-color:#10b981;background:#f0fdf4}
       <div style="background:#fff;border-radius:14px;max-width:520px;margin:0 auto;max-height:85vh;display:flex;flex-direction:column">
         <div style="padding:14px 16px;border-bottom:1px solid #e2e8f0;display:flex;align-items:center;justify-content:space-between">
           <div>
-            <div style="font-weight:600;font-size:15px">📁 Choose Folder</div>
-            <div id="fpBreadcrumb" style="font-size:11px;color:#64748b;margin-top:2px">Select a location</div>
+            <div style="font-weight:600;font-size:15px">📁 My OneDrive — Choose Folder</div>
+            <div id="fpBreadcrumb" style="font-size:11px;color:#64748b;margin-top:2px">Root</div>
           </div>
           <button onclick="closeFolderPicker()" style="background:none;border:none;font-size:22px;cursor:pointer;color:#64748b">✕</button>
         </div>
-        <div style="display:flex;border-bottom:1px solid #e2e8f0;background:#f8fafc">
-          <button id="fpTabMine"   onclick="fpSwitchLocation('mine')"   style="flex:1;padding:10px;border:none;background:none;font-size:12px;font-weight:600;cursor:pointer;border-bottom:2px solid transparent">🏠 My OneDrive</button>
-          <button id="fpTabShared" onclick="fpSwitchLocation('shared')" style="flex:1;padding:10px;border:none;background:none;font-size:12px;font-weight:600;cursor:pointer;border-bottom:2px solid transparent">🏢 SharePoint / Teams</button>
-        </div>
         <div id="fpLoading" style="padding:30px;text-align:center;color:#64748b;font-size:13px;display:none">⏳ Loading…</div>
-        <div id="fpList" style="overflow-y:auto;flex:1;max-height:340px"></div>
+        <div id="fpList" style="overflow-y:auto;flex:1;max-height:380px"></div>
         <div style="padding:12px 16px;border-top:1px solid #e2e8f0;display:flex;gap:8px">
           <button class="btn btn-secondary btn-sm" onclick="fpGoUp()" id="fpUpBtn" style="display:none">⬆ Up</button>
           <button class="btn btn-primary btn-sm" onclick="fpSelectCurrent()" style="flex:1">✅ Select This Folder</button>
@@ -238,6 +222,7 @@ input.filled{border-color:#10b981;background:#f0fdf4}
       </div>
     </div>
 
+    <!-- Events list -->
     <div class="card"><h2>📅 Events</h2><div id="adminEvents"><p style="font-size:13px;color:#94a3b8">No events yet</p></div></div>
   </div>
 </div>
@@ -249,8 +234,7 @@ input.filled{border-color:#10b981;background:#f0fdf4}
 const CLIENT_ID      = '5680a642-9456-40ae-8ce9-9caf0cf4eea8';
 const TENANT         = '8a50a18b-c135-4d02-b21a-bd6b114c6755';
 const REDIRECT_URI   = 'https://blue-water-00104b510.2.azurestaticapps.net';
-// *** KEY FIX: Added Sites.ReadWrite.All for SharePoint access ***
-const SCOPES         = 'Files.ReadWrite.All Sites.ReadWrite.All User.Read';
+const SCOPES         = 'Files.ReadWrite User.Read';
 const ALLOWED_ADMINS = ['meghan.nagvekar@savictech.com','mahesh@savictech.com'];
 const AD_PASS        = 'savic@admin2026';
 const EV_KEY         = 'savic_events_v2';
@@ -262,8 +246,7 @@ const VERIFIER_KEY   = 'savic_pkce_verifier';
 let msToken = null, msUser = null;
 let events = [], leads = [], activeEvent = null;
 let sr = null, af = null;
-let fpStack = [], fpLocation = 'sharepoint', fpDriveId = null, fpSiteId = null, fpItemId = null;
-let destMode = 'sharepoint'; // default to SharePoint
+let fpStack = []; // [{id, name}]
 
 // ─── PKCE ────────────────────────────────────────────────────────────────────
 function b64url(buf) {
@@ -280,11 +263,11 @@ async function generatePKCE() {
 async function initMsal() {
   const p = new URLSearchParams(window.location.search);
   const code = p.get('code'), error = p.get('error');
-  if (error) { toast('❌ Login error: '+(p.get('error_description')||error),'err'); history.replaceState(null,'',window.location.pathname); return; }
+  if (error) { toast('❌ '+( p.get('error_description')||error),'err'); history.replaceState(null,'',window.location.pathname); return; }
   if (code) {
     history.replaceState(null,'',window.location.pathname);
     const v = sessionStorage.getItem(VERIFIER_KEY);
-    if (!v) { toast('❌ Session error. Try signing in again.','err'); return; }
+    if (!v) { toast('❌ Session error. Try again.','err'); return; }
     await exchangeCode(code, v); return;
   }
   const saved = sessionStorage.getItem(TOKEN_KEY);
@@ -295,12 +278,15 @@ async function exchangeCode(code, verifier) {
   try {
     const r = await fetch('https://login.microsoftonline.com/'+TENANT+'/oauth2/v2.0/token', {
       method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'},
-      body: new URLSearchParams({ client_id:CLIENT_ID, grant_type:'authorization_code', code,
-        redirect_uri:REDIRECT_URI, code_verifier:verifier, scope:SCOPES })
+      body: new URLSearchParams({ client_id:CLIENT_ID, grant_type:'authorization_code',
+        code, redirect_uri:REDIRECT_URI, code_verifier:verifier, scope:SCOPES })
     });
     const d = await r.json();
-    if (d.access_token) { sessionStorage.setItem(TOKEN_KEY, d.access_token); sessionStorage.removeItem(VERIFIER_KEY); await loadMsUser(d.access_token); }
-    else toast('❌ Auth failed: '+(d.error_description||d.error),'err');
+    if (d.access_token) {
+      sessionStorage.setItem(TOKEN_KEY, d.access_token);
+      sessionStorage.removeItem(VERIFIER_KEY);
+      await loadMsUser(d.access_token);
+    } else toast('❌ Auth failed: '+(d.error_description||d.error),'err');
   } catch(e) { toast('❌ Token exchange failed','err'); }
 }
 
@@ -319,7 +305,7 @@ function msSignOut() {
   document.getElementById('msUserBadge').style.display='none';
   document.getElementById('odConnected').style.display='none';
   document.getElementById('odDisconnected').style.display='block';
-  updateSaveBtn(); toast('Disconnected');
+  updateSaveBtn(); toast('Disconnected from OneDrive');
 }
 
 async function getToken() {
@@ -327,7 +313,13 @@ async function getToken() {
   if (!t) return null;
   try {
     const r = await fetch('https://graph.microsoft.com/v1.0/me?$select=id',{headers:{Authorization:'Bearer '+t}});
-    if (r.status===401) { msToken=null; msUser=null; sessionStorage.removeItem(TOKEN_KEY); document.getElementById('msUserBadge').style.display='none'; document.getElementById('odConnected').style.display='none'; document.getElementById('odDisconnected').style.display='block'; updateSaveBtn(); toast('⚠️ Session expired. Sign in again.','err'); return null; }
+    if (r.status===401) {
+      msToken=null; msUser=null; sessionStorage.removeItem(TOKEN_KEY);
+      document.getElementById('msUserBadge').style.display='none';
+      document.getElementById('odConnected').style.display='none';
+      document.getElementById('odDisconnected').style.display='block';
+      updateSaveBtn(); toast('⚠️ Session expired. Sign in again.','err'); return null;
+    }
   } catch(e){}
   return t;
 }
@@ -340,7 +332,7 @@ async function loadMsUser(token) {
     const email = (u.mail||u.userPrincipalName||'').toLowerCase();
     if (!ALLOWED_ADMINS.includes(email)) {
       sessionStorage.removeItem(TOKEN_KEY);
-      toast('❌ Access denied. Only authorised SAVIC admins allowed.','err');
+      toast('❌ Access denied. Only authorised SAVIC admins.','err');
       setTimeout(()=>{ window.location.href='https://login.microsoftonline.com/'+TENANT+'/oauth2/v2.0/logout'; },2000);
       return;
     }
@@ -385,21 +377,6 @@ function genToken() {
   for(let i=0;i<8;i++) t+=c[Math.floor(Math.random()*c.length)];
   document.getElementById('newEvToken').value=t;
 }
-
-// ─── DEST MODE ───────────────────────────────────────────────────────────────
-function setDestMode(mode) {
-  destMode=mode;
-  document.getElementById('destBtnOD').className='btn btn-sm '+(mode==='onedrive'?'btn-primary':'btn-secondary');
-  document.getElementById('destBtnSP').className='btn btn-sm '+(mode==='sharepoint'?'btn-primary':'btn-secondary');
-  const lbl=document.getElementById('destModeLabel');
-  lbl.innerHTML=mode==='sharepoint'?'🏢 <b>SharePoint / Teams</b> selected — pick a shared folder below':'🏠 <b>My OneDrive</b> selected — pick a personal folder below';
-  // Clear selection when switching
-  document.getElementById('newEvFolder').value='';
-  document.getElementById('selectedFolderDisplay').style.display='none';
-  window._pendingDriveId=null; window._pendingSiteId=null; window._pendingItemId=null;
-}
-
-// ─── ADD EVENT ───────────────────────────────────────────────────────────────
 function addEvent() {
   const name=document.getElementById('newEvName').value.trim();
   const date=document.getElementById('newEvDate').value;
@@ -409,16 +386,11 @@ function addEvent() {
   if (!name) { toast('Event name required'); return; }
   if (!token) { toast('Token required'); return; }
   if (events.find(e=>e.token===token)) { toast('Token already used','err'); return; }
-  const ev={name,date,token,folder,file,
-    destMode: destMode,
-    driveId: window._pendingDriveId||null,
-    siteId:  window._pendingSiteId||null,
-    itemId:  window._pendingItemId||null,
-    createdAt:new Date().toISOString()};
-  events.push(ev); saveEvents(); renderAdminEvents(); populateLeadsDropdown();
-  window._pendingDriveId=null; window._pendingSiteId=null; window._pendingItemId=null;
+  events.push({name,date,token,folder,file,createdAt:new Date().toISOString()});
+  saveEvents(); renderAdminEvents(); populateLeadsDropdown();
   ['newEvName','newEvDate','newEvToken','newEvFolder','newEvFile'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('selectedFolderDisplay').style.display='none';
+  fpStack=[];
   toast('✅ Event created!','ok');
 }
 function deleteEvent(i) {
@@ -436,8 +408,8 @@ function renderAdminEvents() {
           <p>📅 ${ev.date||'No date'} &nbsp;•&nbsp; Leads: <b>${leads.filter(l=>l.event===ev.name).length}</b></p>
           <p style="margin-top:4px">Token: <span class="token-badge">${ev.token}</span></p>
           ${ev.folder
-            ? `<div class="${ev.destMode==='sharepoint'?'sp-badge':'od-badge'}">${ev.destMode==='sharepoint'?'🏢 SharePoint':'☁️ OneDrive'}: ${ev.folder}/${ev.file||ev.name.replace(/[^a-zA-Z0-9_]/g,'_')}.xlsx</div>`
-            : '<p style="font-size:11px;color:#f59e0b;margin-top:4px">⚠️ No folder set</p>'}
+            ?`<div class="od-badge">☁️ ${ev.folder}/${ev.file||ev.name.replace(/[^a-zA-Z0-9_]/g,'_')}.xlsx</div>`
+            :'<p style="font-size:11px;color:#f59e0b;margin-top:4px">⚠️ No OneDrive folder set</p>'}
         </div>
         <button class="btn btn-danger btn-sm" onclick="deleteEvent(${i})">Delete</button>
       </div>
@@ -445,229 +417,100 @@ function renderAdminEvents() {
 }
 function saveEvents() { localStorage.setItem(EV_KEY,JSON.stringify(events)); }
 
-// ─── FOLDER PICKER ───────────────────────────────────────────────────────────
+// ─── FOLDER PICKER (OneDrive only) ───────────────────────────────────────────
 async function openFolderPicker() {
   if (!msToken) { toast('Sign in with Microsoft first','err'); return; }
+  fpStack=[];
   document.getElementById('folderPickerModal').style.display='block';
-  fpSwitchLocation(destMode==='sharepoint'?'shared':'mine');
+  await fpLoadFolder('root');
 }
 function closeFolderPicker() { document.getElementById('folderPickerModal').style.display='none'; }
 
-function fpSwitchLocation(loc) {
-  fpLocation=loc; fpStack=[]; fpDriveId=null; fpSiteId=null; fpItemId=null;
-  ['fpTabMine','fpTabShared'].forEach(id=>{
-    document.getElementById(id).style.color='#64748b';
-    document.getElementById(id).style.borderBottom='2px solid transparent';
-  });
-  const active=loc==='mine'?'fpTabMine':'fpTabShared';
-  document.getElementById(active).style.color='#2563eb';
-  document.getElementById(active).style.borderBottom='2px solid #2563eb';
-  document.getElementById('fpUpBtn').style.display='none';
-  if (loc==='mine') fpLoadODFolder('root');
-  else fpLoadSites();
-}
+async function fpLoadFolder(folderId) {
+  const loadEl=document.getElementById('fpLoading');
+  const listEl=document.getElementById('fpList');
+  const upBtn=document.getElementById('fpUpBtn');
+  listEl.innerHTML=''; loadEl.style.display='block';
 
-// ── SharePoint: Sites ────────────────────────────────────────────────────────
-async function fpLoadSites() {
-  showFpLoading('Loading SharePoint sites…');
-  document.getElementById('fpBreadcrumb').textContent='SharePoint & Teams Sites';
-  const token=await getToken();
-  try {
-    // Search all accessible sites
-    const r = await fetch('https://graph.microsoft.com/v1.0/sites?search=*&$select=id,displayName,webUrl&$top=50',
-      {headers:{Authorization:'Bearer '+token}});
-    const d=await r.json();
-    hideFpLoading();
-    if (!d.value||!d.value.length) { fpListMsg('No SharePoint sites found. Make sure you have access to at least one site.'); return; }
-    document.getElementById('fpList').innerHTML=d.value.map(s=>`
-      <div onclick="fpEnterSite('${s.id}','${esc(s.displayName)}','${esc(s.webUrl)}')"
-        style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid #f1f5f9;cursor:pointer"
-        onmouseover="this.style.background='#f0f9ff'" onmouseout="this.style.background=''">
-        <div style="display:flex;align-items:center;gap:10px">
-          <span style="font-size:18px">🏢</span>
-          <div><div style="font-size:13px;font-weight:500">${s.displayName}</div>
-          <div style="font-size:11px;color:#94a3b8">${s.webUrl}</div></div>
-        </div><span style="color:#94a3b8">▶</span>
-      </div>`).join('');
-  } catch(e) { hideFpLoading(); fpListMsg('❌ Error loading sites: '+e.message,'err'); }
-}
-
-async function fpEnterSite(siteId, siteName, siteUrl) {
-  fpSiteId=siteId;
-  fpStack=[{type:'site',id:siteId,name:siteName}];
-  document.getElementById('fpBreadcrumb').textContent=siteName;
-  document.getElementById('fpUpBtn').style.display='inline-flex';
-  showFpLoading('Loading document libraries…');
-  const token=await getToken();
-  try {
-    const r=await fetch('https://graph.microsoft.com/v1.0/sites/'+siteId+'/drives?$select=id,name,driveType',
-      {headers:{Authorization:'Bearer '+token}});
-    const d=await r.json(); hideFpLoading();
-    if (!d.value||!d.value.length) { fpListMsg('No document libraries found in this site.'); return; }
-    // Show Shared Documents / document libraries
-    document.getElementById('fpList').innerHTML=d.value.map(drv=>`
-      <div onclick="fpEnterDrive('${drv.id}','${esc(drv.name)}')"
-        style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid #f1f5f9;cursor:pointer"
-        onmouseover="this.style.background='#f0f9ff'" onmouseout="this.style.background=''">
-        <div style="display:flex;align-items:center;gap:10px">
-          <span style="font-size:18px">📚</span>
-          <div><div style="font-size:13px;font-weight:500">${drv.name}</div>
-          <div style="font-size:11px;color:#94a3b8">${drv.driveType}</div></div>
-        </div><span style="color:#94a3b8">▶</span>
-      </div>`).join('');
-  } catch(e) { hideFpLoading(); fpListMsg('❌ Error: '+e.message,'err'); }
-}
-
-async function fpEnterDrive(driveId, driveName) {
-  fpDriveId=driveId;
-  fpStack.push({type:'drive',id:'root',driveId,name:driveName});
-  await fpLoadFolders('root', driveId);
-}
-
-// ── OneDrive: My Drive ───────────────────────────────────────────────────────
-async function fpLoadODFolder(folderId) {
-  showFpLoading('Loading folders…');
   const path=fpStack.map(f=>f.name).join(' / ')||'My OneDrive';
   document.getElementById('fpBreadcrumb').textContent=path;
-  document.getElementById('fpUpBtn').style.display=fpStack.length?'inline-flex':'none';
+  upBtn.style.display=fpStack.length?'inline-flex':'none';
+
   const token=await getToken();
   const url=folderId==='root'
     ?'https://graph.microsoft.com/v1.0/me/drive/root/children?$filter=folder ne null&$select=id,name,folder&$top=100'
     :'https://graph.microsoft.com/v1.0/me/drive/items/'+folderId+'/children?$filter=folder ne null&$select=id,name,folder&$top=100';
   try {
     const r=await fetch(url,{headers:{Authorization:'Bearer '+token}});
-    const d=await r.json(); hideFpLoading();
-    if (!d.value||!d.value.length) { fpListMsg('No subfolders here. Select this folder.'); return; }
-    document.getElementById('fpList').innerHTML=d.value.sort((a,b)=>a.name.localeCompare(b.name)).map(f=>`
-      <div onclick="fpEnterOD('${f.id}','${esc(f.name)}')"
-        style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid #f1f5f9;cursor:pointer"
+    const d=await r.json();
+    loadEl.style.display='none';
+    if (!d.value||!d.value.length) {
+      listEl.innerHTML='<div style="padding:20px;text-align:center;color:#94a3b8;font-size:13px">No subfolders here.<br>Click "Select This Folder" to use this location.</div>';
+      return;
+    }
+    listEl.innerHTML=d.value.sort((a,b)=>a.name.localeCompare(b.name)).map(f=>`
+      <div onclick="fpEnter('${f.id}','${f.name.replace(/'/g,"\\'")}')"
+        style="display:flex;align-items:center;justify-content:space-between;padding:13px 16px;border-bottom:1px solid #f1f5f9;cursor:pointer"
         onmouseover="this.style.background='#f0f9ff'" onmouseout="this.style.background=''">
-        <div style="display:flex;align-items:center;gap:10px"><span>📁</span><span style="font-size:14px">${f.name}</span></div>
-        <span style="color:#94a3b8">▶</span>
+        <div style="display:flex;align-items:center;gap:10px">
+          <span style="font-size:20px">📁</span>
+          <span style="font-size:14px;font-weight:500">${f.name}</span>
+        </div>
+        <span style="color:#94a3b8;font-size:12px">▶</span>
       </div>`).join('');
-  } catch(e) { hideFpLoading(); fpListMsg('❌ Error: '+e.message,'err'); }
+  } catch(e) {
+    loadEl.style.display='none';
+    listEl.innerHTML='<div style="padding:20px;text-align:center;color:#dc2626;font-size:13px">❌ Error loading folders: '+e.message+'</div>';
+  }
 }
-function fpEnterOD(id, name) { fpStack.push({id,name,type:'folder'}); fpLoadODFolder(id); }
 
-// ── SharePoint: Sub-folders ──────────────────────────────────────────────────
-async function fpLoadFolders(folderId, driveId) {
-  showFpLoading('Loading folders…');
-  const folderNames=fpStack.filter(f=>f.type==='folder'||f.type==='drive').map(f=>f.name);
-  document.getElementById('fpBreadcrumb').textContent=folderNames.join(' / ')||'Root';
-  document.getElementById('fpUpBtn').style.display=fpStack.length?'inline-flex':'none';
-  const token=await getToken();
-  const dId=driveId||fpDriveId;
-  const url=folderId==='root'
-    ?'https://graph.microsoft.com/v1.0/drives/'+dId+'/root/children?$filter=folder ne null&$select=id,name,folder&$top=100'
-    :'https://graph.microsoft.com/v1.0/drives/'+dId+'/items/'+folderId+'/children?$filter=folder ne null&$select=id,name,folder&$top=100';
-  try {
-    const r=await fetch(url,{headers:{Authorization:'Bearer '+token}});
-    const d=await r.json(); hideFpLoading();
-    if (!d.value||!d.value.length) { fpListMsg('No subfolders here. Select this folder.'); return; }
-    document.getElementById('fpList').innerHTML=d.value.sort((a,b)=>a.name.localeCompare(b.name)).map(f=>`
-      <div onclick="fpEnterSP('${f.id}','${esc(f.name)}')"
-        style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid #f1f5f9;cursor:pointer"
-        onmouseover="this.style.background='#f0f9ff'" onmouseout="this.style.background=''">
-        <div style="display:flex;align-items:center;gap:10px"><span>📁</span><span style="font-size:14px">${f.name}</span></div>
-        <span style="color:#94a3b8">▶</span>
-      </div>`).join('');
-  } catch(e) { hideFpLoading(); fpListMsg('❌ Error: '+e.message,'err'); }
-}
-function fpEnterSP(id, name) { fpStack.push({id,name,type:'folder',driveId:fpDriveId}); fpLoadFolders(id, fpDriveId); }
+function fpEnter(id, name) { fpStack.push({id,name}); fpLoadFolder(id); }
 
 function fpGoUp() {
   if (!fpStack.length) return;
-  const popped=fpStack.pop();
+  fpStack.pop();
   const top=fpStack[fpStack.length-1];
-  if (!top) {
-    if (fpLocation==='shared') fpLoadSites();
-    else fpLoadODFolder('root');
-  } else if (top.type==='site') {
-    fpEnterSite(top.id, top.name, '');
-  } else if (top.type==='drive') {
-    fpDriveId=top.driveId;
-    fpLoadFolders('root', top.driveId);
-  } else {
-    fpDriveId=top.driveId||fpDriveId;
-    if (fpLocation==='shared') fpLoadFolders(top.id, fpDriveId);
-    else fpLoadODFolder(top.id);
-  }
+  fpLoadFolder(top?top.id:'root');
 }
 
 function fpSelectCurrent() {
-  const folderParts=fpStack.filter(f=>f.type==='folder');
-  const drivePart=fpStack.find(f=>f.type==='drive');
-  const sitePart=fpStack.find(f=>f.type==='site');
-
-  let displayPath='', folderPath='';
-  if (fpLocation==='shared') {
-    const parts=[drivePart,...folderParts].filter(Boolean).map(f=>f.name);
-    displayPath=(sitePart?sitePart.name+' / ':'')+parts.join(' / ');
-    folderPath=parts.join('/');
-  } else {
-    displayPath=fpStack.map(f=>f.name).join(' / ')||'My OneDrive Root';
-    folderPath=fpStack.map(f=>f.name).join('/');
-  }
-
-  const lastFolder=fpStack[fpStack.length-1];
-  window._pendingItemId = lastFolder?.id||null;
-  window._pendingDriveId = fpDriveId;
-  window._pendingSiteId  = fpSiteId;
-
-  document.getElementById('newEvFolder').value=folderPath;
+  const path=fpStack.map(f=>f.name).join('/');
+  const display=path||'My OneDrive (Root)';
+  document.getElementById('newEvFolder').value=path;
   const dispEl=document.getElementById('selectedFolderDisplay');
   dispEl.style.display='block';
-  if (fpLocation==='shared') {
-    dispEl.style.cssText='display:block;margin-top:6px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:7px;padding:8px 10px;font-size:12px;color:#1e40af';
-    dispEl.innerHTML='🏢 <b>SharePoint:</b> '+displayPath;
-  } else {
-    dispEl.style.cssText='display:block;margin-top:6px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:7px;padding:8px 10px;font-size:12px;color:#166534';
-    dispEl.innerHTML='🏠 <b>OneDrive:</b> '+displayPath;
-  }
+  dispEl.innerHTML='☁️ <b>OneDrive:</b> /'+display;
   closeFolderPicker();
-  toast('✅ Folder selected','ok');
+  toast('✅ Folder selected: '+display,'ok');
 }
 
-function showFpLoading(msg) { const l=document.getElementById('fpLoading'); l.textContent=msg||'⏳ Loading…'; l.style.display='block'; document.getElementById('fpList').innerHTML=''; }
-function hideFpLoading() { document.getElementById('fpLoading').style.display='none'; }
-function fpListMsg(msg,type) { document.getElementById('fpList').innerHTML=`<div style="padding:20px;text-align:center;color:${type==='err'?'#dc2626':'#94a3b8'};font-size:13px">${msg}</div>`; }
-function esc(s) { return (s||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'"); }
-
-// ─── SAVE TO SHAREPOINT / ONEDRIVE ───────────────────────────────────────────
-async function saveLeadToCloud(lead, ev) {
+// ─── SAVE TO ONEDRIVE ────────────────────────────────────────────────────────
+async function saveLeadToOneDrive(lead, ev) {
   const token=await getToken();
   if (!token) return {ok:false,msg:'Not signed in to Microsoft'};
 
+  const folder=(ev.folder||'').replace(/^\/+|\/+$/g,'').trim();
   const base=(ev.file||ev.name.replace(/[^a-zA-Z0-9_\-. ]/g,'_').trim());
   const fileName=base.endsWith('.xlsx')?base:base+'.xlsx';
+  const path=folder?folder+'/'+fileName:fileName;
+  const enc=path.split('/').map(encodeURIComponent).join('/');
+  const fileUrl=`https://graph.microsoft.com/v1.0/me/drive/root:/${enc}:/content`;
 
-  let uploadUrl, downloadUrl;
+  // Ensure folder exists
+  if (folder) await ensureFolder(token, folder);
 
-  if (ev.destMode==='sharepoint' && ev.driveId && ev.itemId) {
-    // ── SharePoint: use itemId (the selected folder's item ID) ──
-    // Upload directly into the folder by item ID
-    const encFile=encodeURIComponent(fileName);
-    downloadUrl=`https://graph.microsoft.com/v1.0/drives/${ev.driveId}/items/${ev.itemId}:/${encFile}:/content`;
-    uploadUrl  =downloadUrl;
-  } else {
-    // ── OneDrive: path-based ──
-    const folder=(ev.folder||'').replace(/^\/+|\/+$/g,'').trim();
-    const path=folder?folder+'/'+fileName:fileName;
-    const enc=path.split('/').map(encodeURIComponent).join('/');
-    downloadUrl=`https://graph.microsoft.com/v1.0/me/drive/root:/${enc}:/content`;
-    uploadUrl  =downloadUrl;
-    if (folder) await ensureODFolder(token, folder);
-  }
-
-  // Download existing file to append rows
+  // Download existing to append
   let rows=[];
-  const dl=await fetch(downloadUrl,{headers:{Authorization:'Bearer '+token}});
+  const dl=await fetch(fileUrl,{headers:{Authorization:'Bearer '+token}});
   if (dl.ok) {
-    try { const wb=XLSX.read(await dl.arrayBuffer(),{type:'array'}); const ws=wb.Sheets[wb.SheetNames[0]]; const all=XLSX.utils.sheet_to_json(ws,{header:1,defval:''}); rows=all.length>1?all.slice(1):[]; } catch(e){}
-  } else if (dl.status===404) {
-    // File doesn't exist yet — will create fresh
-  } else {
-    return {ok:false,msg:'Cannot read existing file ('+dl.status+'). Check folder permissions.'};
+    try {
+      const wb=XLSX.read(await dl.arrayBuffer(),{type:'array'});
+      const ws=wb.Sheets[wb.SheetNames[0]];
+      const all=XLSX.utils.sheet_to_json(ws,{header:1,defval:''});
+      rows=all.length>1?all.slice(1):[];
+    } catch(e){}
+  } else if (dl.status!==404) {
+    return {ok:false,msg:'Cannot read existing file ('+dl.status+'). Check OneDrive permissions.'};
   }
 
   const HDR=['#','Event','Captured By','Name','Designation','Company','Phone','Email','LinkedIn','Requirements','Captured At'];
@@ -679,22 +522,25 @@ async function saveLeadToCloud(lead, ev) {
   XLSX.utils.book_append_sheet(wb2,ws2,'Leads');
   const buf=XLSX.write(wb2,{bookType:'xlsx',type:'array'});
 
-  const up=await fetch(uploadUrl,{method:'PUT',headers:{Authorization:'Bearer '+token,'Content-Type':'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'},body:new Blob([buf])});
+  const up=await fetch(fileUrl,{method:'PUT',
+    headers:{Authorization:'Bearer '+token,'Content-Type':'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'},
+    body:new Blob([buf])});
+
   if (up.ok) { const d=await up.json(); return {ok:true,url:d.webUrl}; }
-  const status=up.status;
-  let hint='';
-  if (status===401) hint='Token expired — sign out and sign in again.';
-  else if (status===403) hint='Permission denied — you may not have write access to this SharePoint folder.';
-  else if (status===404) hint='Folder/file not found — re-select the folder in event settings.';
-  return {ok:false,msg:`Upload failed (${status}). ${hint}`};
+  const s=up.status;
+  let hint=s===401?'Session expired — sign out and back in.':s===403?'Permission denied — check OneDrive access.':s===404?'Folder not found — re-select folder.':'';
+  return {ok:false,msg:`Upload failed (${s}). ${hint}`};
 }
 
-async function ensureODFolder(token, folderPath) {
+async function ensureFolder(token, folderPath) {
   const parts=folderPath.split('/').filter(Boolean);
   for (let i=0;i<parts.length;i++) {
     const pEnc=parts.slice(0,i).map(encodeURIComponent).join('/');
-    const pUrl=pEnc?'https://graph.microsoft.com/v1.0/me/drive/root:/'+pEnc+':/children':'https://graph.microsoft.com/v1.0/me/drive/root/children';
-    try { await fetch(pUrl,{method:'POST',headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify({name:parts[i],folder:{},'@microsoft.graph.conflictBehavior':'ignore'})}); } catch(e){}
+    const pUrl=pEnc
+      ?'https://graph.microsoft.com/v1.0/me/drive/root:/'+pEnc+':/children'
+      :'https://graph.microsoft.com/v1.0/me/drive/root/children';
+    try { await fetch(pUrl,{method:'POST',headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},
+      body:JSON.stringify({name:parts[i],folder:{},'@microsoft.graph.conflictBehavior':'ignore'})}); } catch(e){}
   }
 }
 
@@ -722,36 +568,39 @@ function doSignout() {
 }
 function updateSaveBtn() {
   const btn=document.getElementById('saveBtn');
-  if (msUser) { btn.textContent='🏢 Save Lead to SharePoint/OneDrive'; btn.style.background='linear-gradient(135deg,#059669,#047857)'; }
+  if (msUser) { btn.textContent='☁️ Save Lead to OneDrive'; btn.style.background='linear-gradient(135deg,#059669,#047857)'; }
   else { btn.textContent='✅ Save Lead (local only)'; btn.style.background=''; }
 }
-
 async function saveLead() {
   const name=document.getElementById('fName').value.trim();
   const company=document.getElementById('fCompany').value.trim();
   const phone=document.getElementById('fPhone').value.trim();
   const req=document.getElementById('fReq').value.trim();
   if (!name||!company||!phone||!req) { toast('⚠️ Name, Company, Phone & Requirements required'); return; }
-  const lead={id:Date.now(),event:activeEvent.name,capturedBy:document.getElementById('capUserLabel').textContent,name,designation:document.getElementById('fDesig').value.trim(),company,phone,email:document.getElementById('fEmail').value.trim(),linkedin:document.getElementById('fLinkedin').value.trim(),requirements:req,capturedAt:new Date().toISOString()};
+  const lead={id:Date.now(),event:activeEvent.name,capturedBy:document.getElementById('capUserLabel').textContent,
+    name,designation:document.getElementById('fDesig').value.trim(),company,phone,
+    email:document.getElementById('fEmail').value.trim(),linkedin:document.getElementById('fLinkedin').value.trim(),
+    requirements:req,capturedAt:new Date().toISOString()};
   leads.push(lead); localStorage.setItem(LD_KEY,JSON.stringify(leads)); updateBadge();
+
   const ss=document.getElementById('syncStatus');
-  if (msToken && activeEvent.folder) {
-    ss.className='sync-status sync-ing'; ss.textContent='⏳ Saving to '+(activeEvent.destMode==='sharepoint'?'SharePoint':'OneDrive')+'…'; ss.style.display='block';
+  if (msToken && activeEvent.folder!==undefined) {
+    ss.className='sync-status sync-ing'; ss.textContent='⏳ Saving to OneDrive…'; ss.style.display='block';
     document.getElementById('saveBtn').disabled=true;
-    const res=await saveLeadToCloud(lead,activeEvent);
+    const res=await saveLeadToOneDrive(lead,activeEvent);
     document.getElementById('saveBtn').disabled=false;
     if (res.ok) {
       ss.className='sync-status sync-ok';
-      ss.innerHTML=(activeEvent.destMode==='sharepoint'?'🏢 Saved to SharePoint → ':'☁️ Saved to OneDrive → ')+activeEvent.folder+'/'+(activeEvent.file||activeEvent.name.replace(/[^a-zA-Z0-9_]/g,'_'))+'.xlsx'+(res.url?` <a href="${res.url}" target="_blank" style="color:#166534;font-weight:600">Open ↗</a>`:'');
-      toast('✅ Saved!','ok');
+      const filePath=(activeEvent.folder?activeEvent.folder+'/':'')+( activeEvent.file||activeEvent.name.replace(/[^a-zA-Z0-9_]/g,'_'))+'.xlsx';
+      ss.innerHTML='☁️ Saved → '+filePath+(res.url?` <a href="${res.url}" target="_blank" style="color:#166534;font-weight:600">Open ↗</a>`:'');
+      toast('✅ Saved to OneDrive!','ok');
     } else {
       ss.className='sync-status sync-err'; ss.textContent='❌ '+res.msg;
-      toast('Save error — check permissions','err');
+      toast('OneDrive error — lead saved locally','err');
     }
   } else {
     ss.style.display='none';
-    if (!msToken) toast('Saved locally (sign in Microsoft to sync to SharePoint)');
-    else { ss.className='sync-status sync-err'; ss.textContent='⚠️ No folder set for this event.'; ss.style.display='block'; }
+    toast('Saved locally (sign in with Microsoft to sync to OneDrive)');
   }
   clearForm();
 }
@@ -838,9 +687,12 @@ function init(){
   const ld=localStorage.getItem(LD_KEY);if(ld)leads=JSON.parse(ld);
   updateBadge();
   document.getElementById('newEvDate').value=new Date().toISOString().slice(0,10);
-  setDestMode('sharepoint');
   const sess=sessionStorage.getItem('savic_sess');
-  if(sess){const s=JSON.parse(sess);const ev=events.find(e=>e.token===s.evToken);if(ev){activeEvent=ev;document.getElementById('activeEventChip').textContent='📍 '+ev.name;document.getElementById('capUserLabel').textContent=s.userName;document.getElementById('signinCard').style.display='none';document.getElementById('captureForm').style.display='block';}}
+  if(sess){const s=JSON.parse(sess);const ev=events.find(e=>e.token===s.evToken);
+    if(ev){activeEvent=ev;document.getElementById('activeEventChip').textContent='📍 '+ev.name;
+    document.getElementById('capUserLabel').textContent=s.userName;
+    document.getElementById('signinCard').style.display='none';
+    document.getElementById('captureForm').style.display='block';}}
   initMsal();
 }
 init();
