@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
-<title>SAVIC Leads Capture</title>
+<title>SAVIC Leads business card Capture</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;font-family:'Segoe UI',sans-serif}
 body{background:#f0f4f8;min-height:100vh}
@@ -646,42 +646,18 @@ async function extractCardInfo() {
   scanStatus.innerHTML = '⏳ Reading business card with AI…';
 
   try {
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
+    const res = await fetch('/api/scan-card', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 500,
-        messages: [{
-          role: 'user',
-          content: [
-            {
-              type: 'image',
-              source: { type: 'base64', media_type: 'image/jpeg', data: cardImageBase64 }
-            },
-            {
-              type: 'text',
-              text: `Extract details from this business card. Reply ONLY with a JSON object, no extra text:
-{
-  "name": "full name",
-  "company": "company name",
-  "designation": "job title",
-  "phone": "phone number (prefer mobile)",
-  "email": "email address",
-  "linkedin": "linkedin url if visible or empty string"
-}
-If a field is not found, use empty string "".`
-            }
-          ]
-        }]
+        imageBase64: cardImageBase64,
+        mediaType: document.getElementById('fCard').files[0]?.type || 'image/jpeg'
       })
     });
 
-    const data = await res.json();
-    const raw = data.content?.[0]?.text || '';
-    // Strip any markdown fences just in case
-    const clean = raw.replace(/```json|```/g,'').trim();
-    const parsed = JSON.parse(clean);
+    if (!res.ok) throw new Error('API error: ' + res.status);
+    const parsed = await res.json();
+    if (parsed.error) throw new Error(parsed.error);
 
     // Fill fields
     const map = { name:'fName', company:'fCompany', designation:'fDesig', phone:'fPhone', email:'fEmail', linkedin:'fLinkedin' };
