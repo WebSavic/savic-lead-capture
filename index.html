@@ -205,14 +205,22 @@ input.filled{border-color:#10b981;background:#f0fdf4}
     </div>
 
     <!-- Folder Picker Modal -->
-    <div id="folderPickerModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1000;padding:20px;overflow-y:auto">
-      <div style="background:#fff;border-radius:14px;max-width:500px;margin:0 auto;max-height:80vh;display:flex;flex-direction:column">
+    <div id="folderPickerModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1000;padding:16px;overflow-y:auto">
+      <div style="background:#fff;border-radius:14px;max-width:520px;margin:0 auto;max-height:85vh;display:flex;flex-direction:column">
         <div style="padding:14px 16px;border-bottom:1px solid #e2e8f0;display:flex;align-items:center;justify-content:space-between">
-          <div><div style="font-weight:600;font-size:15px">📁 Choose Folder</div><div id="fpBreadcrumb" style="font-size:11px;color:#64748b;margin-top:2px">My Drive</div></div>
+          <div>
+            <div style="font-weight:600;font-size:15px">📁 Choose Folder</div>
+            <div id="fpBreadcrumb" style="font-size:11px;color:#64748b;margin-top:2px">Select a location</div>
+          </div>
           <button onclick="closeFolderPicker()" style="background:none;border:none;font-size:22px;cursor:pointer;color:#64748b">✕</button>
         </div>
+        <!-- Location tabs -->
+        <div style="display:flex;border-bottom:1px solid #e2e8f0;background:#f8fafc">
+          <button id="fpTabMine" onclick="fpSwitchLocation('mine')" style="flex:1;padding:10px;border:none;background:none;font-size:12px;font-weight:600;color:#2563eb;border-bottom:2px solid #2563eb;cursor:pointer">🏠 My Drive</button>
+          <button id="fpTabShared" onclick="fpSwitchLocation('shared')" style="flex:1;padding:10px;border:none;background:none;font-size:12px;font-weight:600;color:#64748b;border-bottom:2px solid transparent;cursor:pointer">🏢 SharePoint / Shared</button>
+        </div>
         <div id="fpLoading" style="padding:30px;text-align:center;color:#64748b;font-size:13px">⏳ Loading…</div>
-        <div id="fpList" style="overflow-y:auto;flex:1"></div>
+        <div id="fpList" style="overflow-y:auto;flex:1;max-height:340px"></div>
         <div style="padding:12px 16px;border-top:1px solid #e2e8f0;display:flex;gap:8px">
           <button class="btn btn-secondary btn-sm" onclick="fpGoUp()" id="fpUpBtn" style="display:none">⬆ Up</button>
           <button class="btn btn-primary btn-sm" onclick="fpSelectCurrent()" style="flex:1">✅ Select This Folder</button>
@@ -232,7 +240,7 @@ input.filled{border-color:#10b981;background:#f0fdf4}
 const CLIENT_ID      = '5680a642-9456-40ae-8ce9-9caf0cf4eea8';
 const TENANT         = '8a50a18b-c135-4d02-b21a-bd6b114c6755';
 const REDIRECT_URI   = 'https://blue-water-00104b510.2.azurestaticapps.net';
-const SCOPES         = 'Files.ReadWrite User.Read';
+const SCOPES         = 'Files.ReadWrite Sites.ReadWrite.All User.Read';
 const ALLOWED_ADMINS = ['meghan.nagvekar@savictech.com','mahesh@savictech.com'];
 const AD_PASS        = 'savic@admin2026';
 const EV_KEY         = 'savic_events_v2';
@@ -425,7 +433,8 @@ function addEvent() {
   if (!name)  { toast('Event name required'); return; }
   if (!token) { toast('Token required'); return; }
   if (events.find(e=>e.token===token)) { toast('Token already used','err'); return; }
-  events.push({name,date,token,folder,file,createdAt:new Date().toISOString()});
+  events.push({name,date,token,folder,file,driveId:window._pendingDriveId||null,createdAt:new Date().toISOString()});
+  window._pendingDriveId = null;
   saveEvents(); renderAdminEvents(); populateLeadsDropdown();
   ['newEvName','newEvDate','newEvToken','newEvFolder','newEvFile'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('selectedFolderDisplay').style.display='none';
@@ -457,46 +466,192 @@ function renderAdminEvents() {
 function saveEvents() { localStorage.setItem(EV_KEY,JSON.stringify(events)); }
 
 // ─── FOLDER PICKER ───────────────────────────────────────────────────────────
+let fpStack = [], fpLocation = 'mine', fpDriveId = null, fpSiteId = null;
+
 async function openFolderPicker() {
   if (!msToken) { toast('Sign in with Microsoft first','err'); return; }
-  document.getElementById('folderPickerModal').style.display='block';
-  fpStack=[];
-  await fpLoadFolder('root');
+  document.getElementById('folderPickerModal').style.display = 'block';
+  fpSwitchLocation('mine');
 }
-function closeFolderPicker() { document.getElementById('folderPickerModal').style.display='none'; }
 
-async function fpLoadFolder(folderId) {
-  const listEl=document.getElementById('fpList'), loadEl=document.getElementById('fpLoading');
-  const upBtn=document.getElementById('fpUpBtn'), bc=document.getElementById('fpBreadcrumb');
-  listEl.innerHTML=''; loadEl.style.display='block';
-  bc.textContent = fpStack.length ? 'My Drive / '+fpStack.map(f=>f.name).join(' / ') : 'My Drive';
-  upBtn.style.display = fpStack.length>0 ? 'inline-flex' : 'none';
-  const token=await getAccessToken();
-  const url = folderId==='root'
-    ? 'https://graph.microsoft.com/v1.0/me/drive/root/children?$filter=folder ne null&$select=id,name,folder&$top=100'
-    : 'https://graph.microsoft.com/v1.0/me/drive/items/'+folderId+'/children?$filter=folder ne null&$select=id,name,folder&$top=100';
+function closeFolderPicker() {
+  document.getElementById('folderPickerModal').style.display = 'none';
+}
+
+function fpSwitchLocation(loc) {
+  fpLocation = loc; fpStack = []; fpDriveId = null;
+  // Update tab styles
+  document.getElementById('fpTabMine').style.color        = loc==='mine' ? '#2563eb' : '#64748b';
+  document.getElementById('fpTabMine').style.borderBottom = loc==='mine' ? '2px solid #2563eb' : '2px solid transparent';
+  document.getElementById('fpTabShared').style.color        = loc==='shared' ? '#2563eb' : '#64748b';
+  document.getElementById('fpTabShared').style.borderBottom = loc==='shared' ? '2px solid #2563eb' : '2px solid transparent';
+  document.getElementById('fpUpBtn').style.display = 'none';
+  if (loc === 'mine') fpLoadFolder('root', null);
+  else fpLoadSharedSites();
+}
+
+// Load SharePoint sites list
+async function fpLoadSharedSites() {
+  const listEl = document.getElementById('fpList');
+  const loadEl = document.getElementById('fpLoading');
+  listEl.innerHTML = ''; loadEl.style.display = 'block';
+  document.getElementById('fpBreadcrumb').textContent = 'SharePoint Sites';
+  const token = await getAccessToken();
   try {
-    const r=await fetch(url,{headers:{Authorization:'Bearer '+token}});
-    const d=await r.json(); loadEl.style.display='none';
-    if (!d.value||!d.value.length) { listEl.innerHTML='<div style="padding:20px;text-align:center;color:#94a3b8;font-size:13px">No subfolders — select this folder</div>'; return; }
-    listEl.innerHTML=d.value.sort((a,b)=>a.name.localeCompare(b.name)).map(f=>`
+    // Get followed sites + search for all sites
+    const r = await fetch('https://graph.microsoft.com/v1.0/sites?search=*&$select=id,displayName,webUrl&$top=50', {
+      headers:{ Authorization:'Bearer '+token }
+    });
+    const d = await r.json();
+    loadEl.style.display = 'none';
+    if (!d.value||!d.value.length) {
+      listEl.innerHTML = '<div style="padding:20px;text-align:center;color:#94a3b8;font-size:13px">No SharePoint sites found</div>';
+      return;
+    }
+    listEl.innerHTML = d.value.map(s => `
+      <div onclick="fpLoadSiteDrives('${s.id}','${s.displayName.replace(/'/g,"\\'")}')"
+        style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid #f1f5f9;cursor:pointer"
+        onmouseover="this.style.background='#f0f9ff'" onmouseout="this.style.background=''">
+        <div style="display:flex;align-items:center;gap:10px">
+          <span style="font-size:18px">🏢</span>
+          <div><div style="font-size:13px;font-weight:500">${s.displayName}</div><div style="font-size:11px;color:#94a3b8">${s.webUrl}</div></div>
+        </div>
+        <span style="color:#94a3b8">▶</span>
+      </div>`).join('');
+  } catch(e) {
+    loadEl.style.display = 'none';
+    listEl.innerHTML = '<div style="padding:20px;text-align:center;color:#dc2626;font-size:13px">❌ Error loading sites</div>';
+  }
+}
+
+// Load document libraries in a SharePoint site
+async function fpLoadSiteDrives(siteId, siteName) {
+  const listEl = document.getElementById('fpList');
+  const loadEl = document.getElementById('fpLoading');
+  listEl.innerHTML = ''; loadEl.style.display = 'block';
+  fpSiteId = siteId;
+  fpStack = [{id:'__site__'+siteId, name:siteName, type:'site'}];
+  document.getElementById('fpBreadcrumb').textContent = siteName;
+  document.getElementById('fpUpBtn').style.display = 'inline-flex';
+  const token = await getAccessToken();
+  try {
+    const r = await fetch('https://graph.microsoft.com/v1.0/sites/'+siteId+'/drives?$select=id,name,driveType', {
+      headers:{ Authorization:'Bearer '+token }
+    });
+    const d = await r.json();
+    loadEl.style.display = 'none';
+    if (!d.value||!d.value.length) {
+      listEl.innerHTML = '<div style="padding:20px;text-align:center;color:#94a3b8;font-size:13px">No document libraries found</div>';
+      return;
+    }
+    listEl.innerHTML = d.value.map(drive => `
+      <div onclick="fpEnterSiteDrive('${drive.id}','${drive.name.replace(/'/g,"\\'")}')"
+        style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid #f1f5f9;cursor:pointer"
+        onmouseover="this.style.background='#f0f9ff'" onmouseout="this.style.background=''">
+        <div style="display:flex;align-items:center;gap:10px">
+          <span style="font-size:18px">📚</span>
+          <span style="font-size:13px;font-weight:500">${drive.name}</span>
+        </div>
+        <span style="color:#94a3b8">▶</span>
+      </div>`).join('');
+  } catch(e) {
+    loadEl.style.display = 'none';
+    listEl.innerHTML = '<div style="padding:20px;text-align:center;color:#dc2626;font-size:13px">❌ Error loading libraries</div>';
+  }
+}
+
+function fpEnterSiteDrive(driveId, driveName) {
+  fpDriveId = driveId;
+  fpStack.push({id:'root', name:driveName, driveId});
+  fpLoadFolder('root', driveId);
+}
+
+async function fpLoadFolder(folderId, driveId) {
+  const listEl = document.getElementById('fpList');
+  const loadEl = document.getElementById('fpLoading');
+  const upBtn  = document.getElementById('fpUpBtn');
+  listEl.innerHTML = ''; loadEl.style.display = 'block';
+
+  // Breadcrumb
+  const path = fpStack.filter(f=>f.type!=='site').map(f=>f.name).join(' / ');
+  document.getElementById('fpBreadcrumb').textContent = path || (fpLocation==='mine' ? 'My Drive' : 'SharePoint');
+  upBtn.style.display = fpStack.length > 0 ? 'inline-flex' : 'none';
+
+  const token = await getAccessToken();
+  const dId = driveId || fpDriveId;
+  let url;
+  if (dId) {
+    // SharePoint drive
+    url = folderId === 'root'
+      ? 'https://graph.microsoft.com/v1.0/drives/'+dId+'/root/children?$filter=folder ne null&$select=id,name,folder&$top=100'
+      : 'https://graph.microsoft.com/v1.0/drives/'+dId+'/items/'+folderId+'/children?$filter=folder ne null&$select=id,name,folder&$top=100';
+  } else {
+    // My Drive
+    url = folderId === 'root'
+      ? 'https://graph.microsoft.com/v1.0/me/drive/root/children?$filter=folder ne null&$select=id,name,folder&$top=100'
+      : 'https://graph.microsoft.com/v1.0/me/drive/items/'+folderId+'/children?$filter=folder ne null&$select=id,name,folder&$top=100';
+  }
+
+  try {
+    const r = await fetch(url, {headers:{Authorization:'Bearer '+token}});
+    const d = await r.json(); loadEl.style.display = 'none';
+    if (!d.value||!d.value.length) {
+      listEl.innerHTML = '<div style="padding:20px;text-align:center;color:#94a3b8;font-size:13px">No subfolders — select this folder</div>';
+      return;
+    }
+    listEl.innerHTML = d.value.sort((a,b)=>a.name.localeCompare(b.name)).map(f=>`
       <div onclick="fpEnter('${f.id}','${f.name.replace(/'/g,"\\'")}')"
         style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid #f1f5f9;cursor:pointer"
         onmouseover="this.style.background='#f0f9ff'" onmouseout="this.style.background=''">
         <div style="display:flex;align-items:center;gap:10px"><span style="font-size:18px">📁</span><span style="font-size:14px">${f.name}</span></div>
         <span style="color:#94a3b8">▶</span>
       </div>`).join('');
-  } catch(e) { loadEl.style.display='none'; listEl.innerHTML='<div style="padding:20px;text-align:center;color:#dc2626">❌ Error loading folders</div>'; }
+  } catch(e) {
+    loadEl.style.display = 'none';
+    listEl.innerHTML = '<div style="padding:20px;text-align:center;color:#dc2626;font-size:13px">❌ Error loading folders</div>';
+  }
 }
-function fpEnter(id,name) { fpStack.push({id,name}); fpLoadFolder(id); }
-function fpGoUp() { fpStack.pop(); const p=fpStack.length?fpStack[fpStack.length-1]:{id:'root'}; fpLoadFolder(p.id); }
+
+function fpEnter(id, name) {
+  fpStack.push({id, name, driveId: fpDriveId});
+  fpLoadFolder(id, fpDriveId);
+}
+
+function fpGoUp() {
+  if (!fpStack.length) return;
+  fpStack.pop();
+  const top = fpStack[fpStack.length-1];
+  if (!top) {
+    // back to root
+    if (fpLocation==='shared') fpLoadSharedSites();
+    else fpLoadFolder('root', null);
+  } else if (top.type==='site') {
+    fpLoadSiteDrives(fpSiteId, top.name);
+  } else {
+    fpDriveId = top.driveId || null;
+    fpLoadFolder(top.id, fpDriveId);
+  }
+}
+
 function fpSelectCurrent() {
-  const path=fpStack.map(f=>f.name).join('/');
-  document.getElementById('newEvFolder').value=path;
-  document.getElementById('selectedFolderName').textContent=path||'Root';
-  document.getElementById('selectedFolderDisplay').style.display='block';
+  // Build path — skip site/library nodes, only folder names
+  const folderParts = fpStack.filter(f=>f.type!=='site');
+  // For SharePoint: store driveId + path separately
+  const path = folderParts.slice(fpDriveId ? 1 : 0).map(f=>f.name).join('/');
+  const displayPath = folderParts.map(f=>f.name).join('/') || 'Root';
+
+  document.getElementById('newEvFolder').value = path;
+  document.getElementById('selectedFolderName').textContent = displayPath;
+  document.getElementById('selectedFolderDisplay').style.display = 'block';
+
+  // Store driveId in event if SharePoint
+  if (fpDriveId) {
+    window._pendingDriveId = fpDriveId;
+    document.getElementById('selectedFolderDisplay').innerHTML =
+      '✅ SharePoint: <b>'+displayPath+'</b> <span style="font-size:10px;color:#166534">(DriveID saved)</span>';
+  }
   closeFolderPicker();
-  toast('✅ Folder: '+path,'ok');
+  toast('✅ Folder selected','ok');
 }
 
 // ─── ONEDRIVE SAVE ───────────────────────────────────────────────────────────
@@ -508,7 +663,12 @@ async function saveLeadToOneDrive(lead, ev) {
   const file=base.endsWith('.xlsx')?base:base+'.xlsx';
   const path=folder?folder+'/'+file:file;
   const enc=path.split('/').map(encodeURIComponent).join('/');
-  const url='https://graph.microsoft.com/v1.0/me/drive/root:/'+enc;
+
+  // Use SharePoint drive if set, otherwise My Drive
+  const driveBase = ev.driveId
+    ? 'https://graph.microsoft.com/v1.0/drives/'+ev.driveId+'/root:/'+enc
+    : 'https://graph.microsoft.com/v1.0/me/drive/root:/'+enc;
+  const url = driveBase;
 
   let rows=[];
   const dl=await fetch(url+':/content',{headers:{Authorization:'Bearer '+token}});
