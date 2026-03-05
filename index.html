@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
-<title>SAVIC Meghan</title>
+<title>SAVIC Lead Capture</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;font-family:'Segoe UI',sans-serif}
 body{background:#f0f4f8;min-height:100vh}
@@ -82,7 +82,7 @@ input.filled{border-color:#10b981;background:#f0fdf4}
 </header>
 
 <div class="tabs">
-  <div class="tab active" onclick="showTab('capture')">📋 captured</div>
+  <div class="tab active" onclick="showTab('capture')">📋 Capture</div>
   <div class="tab" onclick="showTab('leads')">📊 Leads <span class="badge" id="badgeTab">0</span></div>
   <div class="tab" onclick="showTab('admin')">⚙️ Admin</div>
 </div>
@@ -136,14 +136,43 @@ input.filled{border-color:#10b981;background:#f0fdf4}
     <div class="stat-box"><div class="num" id="statTotal">0</div><div class="lbl">Total Leads</div></div>
     <div class="stat-box"><div class="num" id="statToday">0</div><div class="lbl">Today</div></div>
   </div>
+
+  <!-- Admin controls -->
   <div id="adminLeadsControls" style="display:none">
-    <div class="card" style="margin-bottom:14px"><label>Filter by Event</label><select id="leadsEventSel" onchange="renderLeads()"><option value="">All Events</option></select></div>
-    <div style="display:flex;gap:8px;margin-bottom:14px">
-      <button class="btn btn-primary btn-sm" onclick="exportExcel()">⬇️ Export Excel</button>
-      <button class="btn btn-danger btn-sm" onclick="clearAllLeads()">🗑 Clear All</button>
+    <div class="card" style="margin-bottom:14px">
+      <label>Filter by Event</label>
+      <select id="leadsEventSel" onchange="renderLeads()" style="margin-bottom:10px"><option value="">All Events</option></select>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn btn-primary btn-sm" onclick="exportExcel()">⬇️ Export Excel</button>
+        <button class="btn btn-green btn-sm" onclick="syncFromOneDrive()">🔄 Sync OneDrive</button>
+        <button class="btn btn-danger btn-sm" onclick="clearAllLeads()">🗑 Clear All</button>
+      </div>
     </div>
   </div>
-  <div id="fieldUserLeadsInfo" style="display:none" class="info-box">📋 Showing your leads for: <b id="fieldUserEventLabel"></b></div>
+
+  <!-- Field user controls -->
+  <div id="fieldLeadsControls" style="display:none">
+    <div class="info-box" style="margin-bottom:10px">
+      📋 All leads for: <b id="fieldUserEventLabel"></b>
+      <span style="font-size:11px;color:#64748b;display:block;margin-top:4px">👁 View only — contact admin to edit or delete</span>
+    </div>
+    <div style="display:flex;gap:8px;margin-bottom:12px">
+      <button class="btn btn-secondary btn-sm" onclick="syncFromOneDrive()">🔄 Sync from OneDrive</button>
+    </div>
+  </div>
+
+  <div id="syncFromODStatus" style="display:none;margin-bottom:10px;font-size:12px;padding:8px 12px;border-radius:8px"></div>
+
+  <!-- Table view -->
+  <div style="overflow-x:auto;margin-bottom:10px">
+    <table id="leadsTable" style="width:100%;border-collapse:collapse;font-size:12px;display:none">
+      <thead>
+        <tr id="leadsTableHead" style="background:#1e293b;color:#fff;text-align:left"></tr>
+      </thead>
+      <tbody id="leadsTableBody"></tbody>
+    </table>
+  </div>
+
   <div id="leadsList"></div>
 </div>
 
@@ -661,31 +690,43 @@ async function extractCardInfo() {
     const flat  = text.replace(/\s+/g, ' ').trim();
     const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 1);
 
-    // ── Smart field extraction from flat text ──
+    // ── Smart field extraction ──
+
+    // Email: standard pattern
     const emailMatch    = flat.match(/[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}/);
-    const phoneMatch    = flat.match(/(\+?[\d][\d\s\-().]{7,}\d)/);
+
+    // Phone: strip non-digit noise, prefer lines with +91 or 10-digit numbers
+    const phoneRaw = flat.match(/(\+?91[\s\-]?\d{5}[\s\-]?\d{5}|\b\d{10}\b|\+?\d[\d\s\-]{9,}\d)/);
+    const phoneClean = phoneRaw ? phoneRaw[0].replace(/[^\d+]/g,'').replace(/^91(\d{10})$/,'+91 $1') : '';
+
+    // LinkedIn
     const linkedinMatch = flat.match(/linkedin\.com\/in\/[^\s,]*/i);
 
-    // Name: first line with 2+ words, no digits/symbols
-    const nameLine = lines.find(l =>
-      /^[A-Za-z]/.test(l) &&
-      l.split(/\s+/).length >= 2 &&
-      !l.match(/[@\d]/) &&
-      !l.match(/www\.|http|linkedin/i) &&
-      l.length > 4
-    ) || '';
-
-    // Company: line with business keywords
-    const companyLine = lines.find(l =>
-      l.match(/ltd|pvt|inc|corp|group|tech|solution|service|consult|enterprise|industry|bricks|matrix|co\.|llp/i) &&
-      l !== nameLine
-    ) || '';
-
-    // Designation: line with title keywords
+    // Designation: find FIRST line matching title keywords
     const desigLine = lines.find(l =>
-      l.match(/ceo|cto|coo|manager|director|founder|head|officer|executive|president|vp |vice|lead|engineer|consultant|analyst|associate|partner|advisor/i) &&
-      l !== nameLine && l !== companyLine
+      l.match(/\b(ceo|cto|coo|cso|cmo|manager|director|founder|co-founder|head|officer|executive|president|vp|vice|lead|engineer|consultant|analyst|associate|partner|advisor|representative|sales|marketing)\b/i)
     ) || '';
+
+    // Company: line with brand/company keywords OR the line BEFORE designation
+    // Also skip lines that look like slogans (4+ words with "your","by","the")
+    const desigIdx = lines.indexOf(desigLine);
+    const companyLine = lines.find((l, idx) => {
+      if (l === desigLine) return false;
+      if (l.match(/\b(ltd|pvt|inc|corp|group|tech|solution|service|consult|enterprise|industry|bricks|matrix|co\.|llp|ventures|associates|systems)\b/i)) return true;
+      // Line just before designation that has 1-3 words and no digits
+      if (desigIdx > 0 && idx === desigIdx - 1 && l.split(/\s+/).length <= 4 && !l.match(/\d/) && !l.match(/www\.|http/i)) return true;
+      return false;
+    }) || '';
+
+    // Name: proper name — 2-4 words, starts with capital, has a middle initial or surname pattern
+    // Prefer lines matching "Firstname [M.] Lastname" pattern
+    const nameLine = lines.find(l => {
+      if (l === desigLine || l === companyLine) return false;
+      if (l.match(/[@\d]/) || l.match(/www\.|http|linkedin/i)) return false;
+      if (l.match(/\b(we|your|our|the|by|and|for|build|brick)\b/i)) return false; // skip slogans
+      const words = l.trim().split(/\s+/);
+      return words.length >= 2 && words.length <= 5 && /^[A-Z]/.test(l);
+    }) || '';
 
     const parsed = {
       name       : nameLine,
@@ -745,28 +786,137 @@ function stopMic(){if(sr){try{sr.stop();}catch(e){}sr=null;}if(af){const b=docum
 
 // ─── LEADS ───────────────────────────────────────────────────────────────────
 function isAdmin(){return msUser&&ALLOWED_ADMINS.includes(msUser.email.toLowerCase());}
+
 function renderLeads(){
-  const el=document.getElementById('leadsList');
-  let list=[];
-  if(isAdmin()){const f=document.getElementById('leadsEventSel').value;list=f?leads.filter(l=>l.event===f):leads;}
-  else if(activeEvent){const s=sessionStorage.getItem('savic_sess');const u=s?JSON.parse(s).userName:'';list=leads.filter(l=>l.event===activeEvent.name&&l.capturedBy===u);}
-  document.getElementById('statTotal').textContent=isAdmin()?leads.length:list.length;
-  document.getElementById('statToday').textContent=list.filter(l=>new Date(l.capturedAt).toDateString()===new Date().toDateString()).length;
-  if(!list.length){el.innerHTML='<div style="text-align:center;color:#94a3b8;padding:30px">No leads found</div>';return;}
-  el.innerHTML=list.slice().reverse().map(l=>`
-    <div class="lead-item">
-      <h3>${l.name}${l.designation?' <span style="font-weight:400;font-size:12px;color:#64748b">– '+l.designation+'</span>':''}</h3>
-      <p>🏢 ${l.company} &nbsp;•&nbsp; 👤 ${l.capturedBy||'–'}</p>
-      <p>📞 ${l.phone}${l.email?' &nbsp;✉️ '+l.email:''}</p>
-      <p style="margin-top:4px">📝 ${l.requirements.substring(0,90)}${l.requirements.length>90?'…':''}</p>
-      <p style="font-size:11px;color:#94a3b8;margin-top:4px">📍 ${l.event} &nbsp;•&nbsp; ${new Date(l.capturedAt).toLocaleString('en-IN')}</p>
-    </div>`).join('');
+  const admin = isAdmin();
+  document.getElementById('adminLeadsControls').style.display = admin ? 'block' : 'none';
+  document.getElementById('fieldLeadsControls').style.display = (!admin && activeEvent) ? 'block' : 'none';
+  if (activeEvent) document.getElementById('fieldUserEventLabel').textContent = activeEvent.name;
+
+  let list = [];
+  if (admin) {
+    const f = document.getElementById('leadsEventSel').value;
+    list = f ? leads.filter(l=>l.event===f) : leads;
+  } else if (activeEvent) {
+    // Field users see ALL leads for their event (read-only)
+    list = leads.filter(l => l.event === activeEvent.name);
+  }
+
+  document.getElementById('statTotal').textContent = list.length;
+  document.getElementById('statToday').textContent = list.filter(l=>new Date(l.capturedAt).toDateString()===new Date().toDateString()).length;
+
+  const tableEl = document.getElementById('leadsTable');
+  const headEl  = document.getElementById('leadsTableHead');
+  const bodyEl  = document.getElementById('leadsTableBody');
+  const listEl  = document.getElementById('leadsList');
+  listEl.innerHTML = '';
+
+  if (!list.length) {
+    tableEl.style.display = 'none';
+    listEl.innerHTML = '<div style="text-align:center;color:#94a3b8;padding:30px">No leads found</div>';
+    return;
+  }
+
+  // ── Table view ──
+  tableEl.style.display = 'table';
+  const cols = admin
+    ? ['#','Name','Designation','Company','Phone','Email','Captured By','Captured At','']
+    : ['#','Name','Designation','Company','Phone','Email','Captured By','Captured At'];
+
+  headEl.innerHTML = cols.map(c=>`<th style="padding:8px 10px;white-space:nowrap;font-size:11px;font-weight:600">${c}</th>`).join('');
+
+  bodyEl.innerHTML = list.slice().reverse().map((l,i) => `
+    <tr style="border-bottom:1px solid #e2e8f0;${i%2===0?'background:#f8fafc':'background:#fff'}">
+      <td style="padding:7px 10px;color:#94a3b8;font-size:11px">${list.length-i}</td>
+      <td style="padding:7px 10px;font-weight:600;white-space:nowrap">${l.name}</td>
+      <td style="padding:7px 10px;color:#64748b;white-space:nowrap">${l.designation||'–'}</td>
+      <td style="padding:7px 10px;white-space:nowrap">${l.company}</td>
+      <td style="padding:7px 10px;white-space:nowrap"><a href="tel:${l.phone}" style="color:#2563eb;text-decoration:none">${l.phone}</a></td>
+      <td style="padding:7px 10px;white-space:nowrap">${l.email?`<a href="mailto:${l.email}" style="color:#2563eb;text-decoration:none">${l.email}</a>`:'–'}</td>
+      <td style="padding:7px 10px;color:#64748b;white-space:nowrap">${l.capturedBy||'–'}</td>
+      <td style="padding:7px 10px;color:#94a3b8;font-size:11px;white-space:nowrap">${new Date(l.capturedAt).toLocaleString('en-IN')}</td>
+      ${admin ? `<td style="padding:7px 10px"><button onclick="deleteLead(${l.id})" style="background:#fef2f2;border:1px solid #fecaca;color:#dc2626;border-radius:6px;padding:3px 8px;font-size:11px;cursor:pointer">🗑</button></td>` : ''}
+    </tr>`).join('');
+}
+
+function deleteLead(id) {
+  if (!isAdmin()) { toast('Only admin can delete leads','err'); return; }
+  if (!confirm('Delete this lead?')) return;
+  leads = leads.filter(l => l.id !== id);
+  localStorage.setItem(LD_KEY, JSON.stringify(leads));
+  updateBadge(); renderLeads(); toast('Lead deleted');
+}
+
+// ── Sync from OneDrive ────────────────────────────────────────────────────────
+async function syncFromOneDrive() {
+  const statusEl = document.getElementById('syncFromODStatus');
+  statusEl.style.display = 'block';
+  statusEl.style.background = '#fffbeb'; statusEl.style.border = '1px solid #f59e0b'; statusEl.style.color = '#92400e';
+  statusEl.textContent = '⏳ Syncing from OneDrive…';
+
+  const token = await getToken();
+  if (!token) { statusEl.textContent = '❌ Sign in with Microsoft to sync'; statusEl.style.background='#fef2f2'; statusEl.style.borderColor='#fecaca'; statusEl.style.color='#dc2626'; return; }
+
+  // Determine which event to sync
+  const ev = isAdmin()
+    ? events.find(e => e.name === document.getElementById('leadsEventSel').value) || events[0]
+    : activeEvent;
+
+  if (!ev || !ev.folder) { statusEl.textContent = '⚠️ No OneDrive folder set for this event'; return; }
+
+  const base = (ev.file||ev.name.replace(/[^a-zA-Z0-9_\-. ]/g,'_').trim());
+  const fileName = base.endsWith('.xlsx') ? base : base+'.xlsx';
+  const folder = (ev.folder||'').replace(/^\/+|\/+$/g,'').trim();
+  const path = folder ? folder+'/'+fileName : fileName;
+  const enc = path.split('/').map(encodeURIComponent).join('/');
+  const fileUrl = `https://graph.microsoft.com/v1.0/me/drive/root:/${enc}:/content`;
+
+  try {
+    const dl = await fetch(fileUrl, {headers:{Authorization:'Bearer '+token}});
+    if (!dl.ok) { statusEl.textContent = '❌ File not found on OneDrive ('+dl.status+')'; statusEl.style.background='#fef2f2'; statusEl.style.borderColor='#fecaca'; statusEl.style.color='#dc2626'; return; }
+
+    const wb = XLSX.read(await dl.arrayBuffer(), {type:'array'});
+    const ws = wb.Sheets[wb.SheetNames[0]];
+    const rows = XLSX.utils.sheet_to_json(ws, {defval:''});
+
+    // Merge OneDrive rows into local leads (avoid duplicates by phone+event)
+    let added = 0;
+    for (const row of rows) {
+      const exists = leads.find(l => l.phone === String(row['Phone']||'') && l.event === String(row['Event']||''));
+      if (!exists && row['Name']) {
+        leads.push({
+          id: Date.now() + Math.random(),
+          event: String(row['Event']||ev.name),
+          capturedBy: String(row['Captured By']||''),
+          name: String(row['Name']||''),
+          designation: String(row['Designation']||''),
+          company: String(row['Company']||''),
+          phone: String(row['Phone']||''),
+          email: String(row['Email']||''),
+          linkedin: String(row['LinkedIn']||''),
+          requirements: String(row['Requirements']||''),
+          capturedAt: new Date().toISOString()
+        });
+        added++;
+      }
+    }
+    localStorage.setItem(LD_KEY, JSON.stringify(leads));
+    statusEl.style.background='#f0fdf4'; statusEl.style.borderColor='#bbf7d0'; statusEl.style.color='#166534';
+    statusEl.textContent = `✅ Synced! ${rows.length} total rows, ${added} new added from OneDrive.`;
+    updateBadge(); renderLeads();
+    toast('✅ Synced from OneDrive', 'ok');
+  } catch(e) {
+    statusEl.style.background='#fef2f2'; statusEl.style.borderColor='#fecaca'; statusEl.style.color='#dc2626';
+    statusEl.textContent = '❌ Sync error: '+e.message;
+  }
 }
 function populateLeadsDropdown(){
-  document.getElementById('adminLeadsControls').style.display=isAdmin()?'block':'none';
-  document.getElementById('fieldUserLeadsInfo').style.display=(!isAdmin()&&activeEvent)?'block':'none';
-  if(activeEvent)document.getElementById('fieldUserEventLabel').textContent=activeEvent.name;
-  if(isAdmin()){const s=document.getElementById('leadsEventSel');const c=s.value;s.innerHTML='<option value="">All Events</option>';events.forEach(ev=>s.innerHTML+=`<option value="${ev.name}"${c===ev.name?' selected':''}>${ev.name}</option>`);}
+  if(isAdmin()){
+    const s=document.getElementById('leadsEventSel');
+    const c=s.value;
+    s.innerHTML='<option value="">All Events</option>';
+    events.forEach(ev=>s.innerHTML+=`<option value="${ev.name}"${c===ev.name?' selected':''}>${ev.name}</option>`);
+  }
   renderLeads();
 }
 function updateBadge(){
