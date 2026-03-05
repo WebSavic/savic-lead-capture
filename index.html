@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
-<title>SAVICs Leads business card Capture</title>
+<title>SAVIC Latest</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;font-family:'Segoe UI',sans-serif}
 body{background:#f0f4f8;min-height:100vh}
@@ -238,6 +238,7 @@ input.filled{border-color:#10b981;background:#f0fdf4}
 
 <div class="snack snack-info" id="sbar"></div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/4.1.1/tesseract.min.js"></script>
 <script>
 // ─── CONFIG ──────────────────────────────────────────────────────────────────
 const CLIENT_ID      = '5680a642-9456-40ae-8ce9-9caf0cf4eea8';
@@ -615,20 +616,20 @@ async function saveLead() {
 }
 function clearForm() {
   ['fName','fCompany','fDesig','fPhone','fEmail','fLinkedin','fReq'].forEach(id=>document.getElementById(id).value='');
-  cardImageBase64=null; document.getElementById('cardPreview').src=''; document.getElementById('cardPreview').style.display='none';
+  cardImageDataUrl=null; document.getElementById('cardPreview').src=''; document.getElementById('cardPreview').style.display='none';
   document.getElementById('scanBtn').style.display='none'; document.getElementById('scanStatus').style.display='none';
   stopMic(); document.getElementById('syncStatus').style.display='none';
 }
-// ─── BUSINESS CARD SCAN ───────────────────────────────────────────────────────
-let cardImageBase64 = null;
+// ─── BUSINESS CARD SCAN (Tesseract.js – free, no API key) ────────────────────
+let cardImageDataUrl = null;
 
 function scanCard(inp) {
   const f = inp.files[0]; if (!f) return;
   const r = new FileReader();
   r.onload = e => {
+    cardImageDataUrl = e.target.result;
     const img = document.getElementById('cardPreview');
-    img.src = e.target.result; img.style.display = 'block';
-    cardImageBase64 = e.target.result.split(',')[1]; // base64 only
+    img.src = cardImageDataUrl; img.style.display = 'block';
     document.getElementById('scanBtn').style.display = 'inline-flex';
     document.getElementById('scanStatus').style.display = 'none';
   };
@@ -638,28 +639,62 @@ function scanCard(inp) {
 function triggerScan() { extractCardInfo(); }
 
 async function extractCardInfo() {
-  if (!cardImageBase64) { toast('No card image loaded','err'); return; }
+  if (!cardImageDataUrl) { toast('No card image loaded','err'); return; }
   const scanBtn = document.getElementById('scanBtn');
   const scanStatus = document.getElementById('scanStatus');
   scanBtn.disabled = true; scanBtn.textContent = '⏳ Scanning…';
   scanStatus.style.display = 'block';
-  scanStatus.innerHTML = '⏳ Reading business card with AI…';
+  scanStatus.style.background = '#eff6ff'; scanStatus.style.borderColor = '#bfdbfe'; scanStatus.style.color = '#1e40af';
+  scanStatus.innerHTML = '⏳ Reading card text… (first run may take ~10 sec)';
 
   try {
-    const res = await fetch('/api/scan-card', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        imageBase64: cardImageBase64,
-        mediaType: document.getElementById('fCard').files[0]?.type || 'image/jpeg'
-      })
+    const { data: { text } } = await Tesseract.recognize(cardImageDataUrl, 'eng', {
+      logger: m => {
+        if (m.status === 'recognizing text') {
+          scanStatus.innerHTML = '⏳ Scanning… ' + Math.round(m.progress * 100) + '%';
+        }
+      }
     });
 
-    if (!res.ok) throw new Error('API error: ' + res.status);
-    const parsed = await res.json();
-    if (parsed.error) throw new Error(parsed.error);
+    if (!text || text.trim().length < 5) throw new Error('Could not read text from image. Try a clearer photo.');
 
-    // Fill fields
+    const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 1);
+
+    // ── Smart field extraction ──
+    const emailMatch   = text.match(/[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}/);
+    const phoneMatch   = text.match(/(\+?\d[\d\s\-().]{7,}\d)/);
+    const linkedinMatch= text.match(/linkedin\.com\/in\/[^\s,]*/i);
+    const websiteMatch = text.match(/(?:www\.|https?:\/\/)[^\s,]+/i);
+
+    // Name: usually first non-empty line that isn't a phone/email/web
+    const nameLine = lines.find(l =>
+      !l.match(/[@\d+\-()|]/) &&
+      !l.match(/www\.|http/i) &&
+      !l.match(/linkedin/i) &&
+      l.split(' ').length >= 1 && l.length > 2
+    ) || '';
+
+    // Company: look for lines with Ltd, Pvt, Inc, Corp, Technologies, Solutions etc.
+    const companyLine = lines.find(l =>
+      l.match(/ltd|pvt|inc|corp|group|tech|solution|service|consult|enterprise|industry|bricks|matrix/i) &&
+      l !== nameLine
+    ) || '';
+
+    // Designation: look for common title keywords
+    const desigLine = lines.find(l =>
+      l.match(/ceo|cto|coo|manager|director|founder|head|officer|executive|president|vp |vice|lead|engineer|consultant|analyst|associate|partner|advisor/i) &&
+      l !== nameLine && l !== companyLine
+    ) || '';
+
+    const parsed = {
+      name       : nameLine,
+      company    : companyLine,
+      designation: desigLine,
+      phone      : phoneMatch   ? phoneMatch[0].trim() : '',
+      email      : emailMatch   ? emailMatch[0]        : '',
+      linkedin   : linkedinMatch? linkedinMatch[0]     : ''
+    };
+
     const map = { name:'fName', company:'fCompany', designation:'fDesig', phone:'fPhone', email:'fEmail', linkedin:'fLinkedin' };
     let filled = [];
     for (const [key, fieldId] of Object.entries(map)) {
@@ -669,17 +704,22 @@ async function extractCardInfo() {
         filled.push(key);
       }
     }
-    scanStatus.innerHTML = filled.length
-      ? '✅ Auto-filled: <b>' + filled.join(', ') + '</b>. Please review and add Requirements.'
-      : '⚠️ Could not extract info. Please fill manually.';
+
+    // Show raw text so user can manually fix anything missed
+    const rawPreview = lines.slice(0,10).join(' | ');
     scanStatus.style.background = filled.length ? '#f0fdf4' : '#fffbeb';
     scanStatus.style.borderColor = filled.length ? '#bbf7d0' : '#f59e0b';
     scanStatus.style.color = filled.length ? '#166534' : '#92400e';
-    toast(filled.length ? '✅ Card scanned!' : '⚠️ Could not read card', filled.length ? 'ok' : 'info');
+    scanStatus.innerHTML = (filled.length
+      ? '✅ Auto-filled: <b>' + filled.join(', ') + '</b>. Review & correct if needed.<br>'
+      : '⚠️ Fields not auto-detected — fill manually.<br>')
+      + '<span style="font-size:11px;opacity:.7">📄 Read: ' + rawPreview + '</span>';
+
+    toast(filled.length ? '✅ Card scanned!' : '⚠️ Could not detect fields', filled.length ? 'ok' : 'info');
   } catch(e) {
-    scanStatus.innerHTML = '❌ Scan failed: ' + e.message;
     scanStatus.style.background = '#fef2f2'; scanStatus.style.borderColor = '#fecaca'; scanStatus.style.color = '#dc2626';
-    toast('Scan error','err');
+    scanStatus.innerHTML = '❌ ' + e.message;
+    toast('Scan failed','err');
   }
   scanBtn.disabled = false; scanBtn.textContent = '✨ Extract Info';
 }
