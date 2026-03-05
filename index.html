@@ -252,6 +252,7 @@ const VERIFIER_KEY   = 'savic_pkce_verifier';
 let msToken = null, msUser = null;
 let events = [], leads = [], activeEvent = null;
 let sr = null, af = null;
+// folder picker state
 let fpStack = [], fpLocation = 'mine', fpDriveId = null, fpSiteId = null;
 
 // ─── PKCE HELPERS ────────────────────────────────────────────────────────────
@@ -467,8 +468,6 @@ function renderAdminEvents() {
 function saveEvents() { localStorage.setItem(EV_KEY,JSON.stringify(events)); }
 
 // ─── FOLDER PICKER ───────────────────────────────────────────────────────────
-let fpStack = [], fpLocation = 'mine', fpDriveId = null, fpSiteId = null;
-
 async function openFolderPicker() {
   if (!msToken) { toast('Sign in with Microsoft first','err'); return; }
   document.getElementById('folderPickerModal').style.display = 'block';
