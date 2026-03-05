@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
-<title>SAVIC Lead Capture</title>
+<title>SAVIC Meghan</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;font-family:'Segoe UI',sans-serif}
 body{background:#f0f4f8;min-height:100vh}
@@ -82,7 +82,7 @@ input.filled{border-color:#10b981;background:#f0fdf4}
 </header>
 
 <div class="tabs">
-  <div class="tab active" onclick="showTab('capture')">📋 Capture</div>
+  <div class="tab active" onclick="showTab('capture')">📋 captured</div>
   <div class="tab" onclick="showTab('leads')">📊 Leads <span class="badge" id="badgeTab">0</span></div>
   <div class="tab" onclick="showTab('admin')">⚙️ Admin</div>
 </div>
@@ -638,43 +638,6 @@ function scanCard(inp) {
 
 function triggerScan() { extractCardInfo(); }
 
-// Pre-process: rotate image to all 4 angles, pick best OCR result
-async function ocrAllAngles(dataUrl, scanStatus) {
-  const angles = [0, 90, 180, 270];
-  let best = { text: '', len: 0 };
-  for (const angle of angles) {
-    scanStatus.innerHTML = `⏳ Trying angle ${angle}°…`;
-    const rotated = await rotateImage(dataUrl, angle);
-    const { data: { text } } = await Tesseract.recognize(rotated, 'eng');
-    const clean = text.replace(/\s+/g,' ').trim();
-    // Score: prefer text with email/phone patterns
-    const score = clean.length
-      + (clean.match(/@/)     ? 50 : 0)
-      + (clean.match(/\d{5,}/)? 40 : 0)
-      + (clean.match(/\w{4,}/)? 10 : 0);
-    if (score > best.len) best = { text: clean, len: score, angle };
-  }
-  return best.text;
-}
-
-function rotateImage(dataUrl, degrees) {
-  return new Promise(resolve => {
-    const img = new Image();
-    img.onload = () => {
-      const canvas = document.createElement('canvas');
-      const swap = degrees === 90 || degrees === 270;
-      canvas.width  = swap ? img.height : img.width;
-      canvas.height = swap ? img.width  : img.height;
-      const ctx = canvas.getContext('2d');
-      ctx.translate(canvas.width/2, canvas.height/2);
-      ctx.rotate(degrees * Math.PI / 180);
-      ctx.drawImage(img, -img.width/2, -img.height/2);
-      resolve(canvas.toDataURL('image/jpeg', 0.9));
-    };
-    img.src = dataUrl;
-  });
-}
-
 async function extractCardInfo() {
   if (!cardImageDataUrl) { toast('No card image loaded','err'); return; }
   const scanBtn = document.getElementById('scanBtn');
@@ -682,36 +645,43 @@ async function extractCardInfo() {
   scanBtn.disabled = true; scanBtn.textContent = '⏳ Scanning…';
   scanStatus.style.display = 'block';
   scanStatus.style.background = '#eff6ff'; scanStatus.style.borderColor = '#bfdbfe'; scanStatus.style.color = '#1e40af';
-  scanStatus.innerHTML = '⏳ Reading card (trying all orientations)…';
+  scanStatus.innerHTML = '⏳ Reading card…';
 
   try {
-    const text = await ocrAllAngles(cardImageDataUrl, scanStatus);
+    const { data: { text } } = await Tesseract.recognize(cardImageDataUrl, 'eng', {
+      logger: m => {
+        if (m.status === 'recognizing text')
+          scanStatus.innerHTML = '⏳ Scanning… ' + Math.round(m.progress * 100) + '%';
+      }
+    });
 
     if (!text || text.trim().length < 5) throw new Error('Could not read text. Try a clearer, well-lit photo.');
 
-    const lines = text.split(/[\n|]/).map(l => l.trim()).filter(l => l.length > 1);
+    // Flatten all text into one searchable string + lines
+    const flat  = text.replace(/\s+/g, ' ').trim();
+    const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 1);
 
-    // ── Smart field extraction ──
-    const emailMatch   = text.match(/[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}/);
-    const phoneMatch   = text.match(/(\+?\d[\d\s\-().]{7,}\d)/);
-    const linkedinMatch= text.match(/linkedin\.com\/in\/[^\s,]*/i);
-    const websiteMatch = text.match(/(?:www\.|https?:\/\/)[^\s,]+/i);
+    // ── Smart field extraction from flat text ──
+    const emailMatch    = flat.match(/[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}/);
+    const phoneMatch    = flat.match(/(\+?[\d][\d\s\-().]{7,}\d)/);
+    const linkedinMatch = flat.match(/linkedin\.com\/in\/[^\s,]*/i);
 
-    // Name: usually first non-empty line that isn't a phone/email/web
+    // Name: first line with 2+ words, no digits/symbols
     const nameLine = lines.find(l =>
-      !l.match(/[@\d+\-()|]/) &&
-      !l.match(/www\.|http/i) &&
-      !l.match(/linkedin/i) &&
-      l.split(' ').length >= 1 && l.length > 2
+      /^[A-Za-z]/.test(l) &&
+      l.split(/\s+/).length >= 2 &&
+      !l.match(/[@\d]/) &&
+      !l.match(/www\.|http|linkedin/i) &&
+      l.length > 4
     ) || '';
 
-    // Company: look for lines with Ltd, Pvt, Inc, Corp, Technologies, Solutions etc.
+    // Company: line with business keywords
     const companyLine = lines.find(l =>
-      l.match(/ltd|pvt|inc|corp|group|tech|solution|service|consult|enterprise|industry|bricks|matrix/i) &&
+      l.match(/ltd|pvt|inc|corp|group|tech|solution|service|consult|enterprise|industry|bricks|matrix|co\.|llp/i) &&
       l !== nameLine
     ) || '';
 
-    // Designation: look for common title keywords
+    // Designation: line with title keywords
     const desigLine = lines.find(l =>
       l.match(/ceo|cto|coo|manager|director|founder|head|officer|executive|president|vp |vice|lead|engineer|consultant|analyst|associate|partner|advisor/i) &&
       l !== nameLine && l !== companyLine
