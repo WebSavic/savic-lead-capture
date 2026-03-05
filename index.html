@@ -251,7 +251,8 @@ const VERIFIER_KEY   = 'savic_pkce_verifier';
 // ─── STATE ───────────────────────────────────────────────────────────────────
 let msToken = null, msUser = null;
 let events = [], leads = [], activeEvent = null;
-let sr = null, af = null, fpStack = [];
+let sr = null, af = null;
+let fpStack = [], fpLocation = 'mine', fpDriveId = null, fpSiteId = null;
 
 // ─── PKCE HELPERS ────────────────────────────────────────────────────────────
 function b64url(buf) {
